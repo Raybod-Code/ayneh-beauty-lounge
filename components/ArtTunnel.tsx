@@ -8,7 +8,7 @@ export default function ArtTunnel() {
   const targetRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: targetRef });
 
-  // حرکت افقی (از 0 تا -75 درصد)
+  // اسکرول افقی
   const x = useTransform(scrollYProgress, [0, 1], ["0%", "-75%"]);
 
   return (
@@ -17,47 +17,73 @@ export default function ArtTunnel() {
         
         <motion.div style={{ x }} className="flex">
           
-          {/* --- پرده 1: STYLE --- */}
-          <div className="relative h-screen w-screen flex items-center justify-center flex-shrink-0">
-             <h1 className="text-[25vw] font-black text-brand-dark/5 select-none absolute z-0" style={{ fontFamily: 'var(--font-doran)' }}>
-               STYLE
-             </h1>
+          {/* --- بخش ۱: STYLE (با متن طلایی) --- */}
+          <div className="relative h-screen w-screen flex items-center justify-center flex-shrink-0 bg-[#F5F5F0]">
+             {/* عکس متن STYLE */}
+             <div className="absolute inset-0 flex items-center justify-center opacity-10 md:opacity-20 pointer-events-none">
+                <div className="relative w-[90vw] h-[50vh]">
+                  <Image src="/images/text-style.png" alt="STYLE" fill className="object-contain" />
+                </div>
+             </div>
+
+             {/* عکس براش آرایشی معلق */}
+             <motion.div 
+               style={{ x: useTransform(scrollYProgress, [0, 0.3], [200, -200]), rotate: 15 }} 
+               className="absolute top-20 right-20 w-40 h-40 md:w-80 md:h-80 z-0 opacity-80"
+             >
+                <Image src="/images/floating-brush.png" alt="Brush" fill className="object-contain drop-shadow-xl" />
+             </motion.div>
+
              <div className="relative z-10 max-w-xl text-center px-6">
-               <h3 className="text-5xl md:text-7xl font-serif text-brand-dark mb-6">معماریِ مو</h3>
+               <h3 className="text-5xl md:text-7xl font-serif text-brand-dark mb-6">استایلِ تو</h3>
                <p className="text-brand-gray text-lg leading-loose">
-                 در آیـنـه، قیچی یک ابزار نیست؛ امتدادِ ذهنِ هنرمند است.<br/>
-                 ما خطوط چهره شما را بازتعریف می‌کنیم.
+                 ما فقط موها را کوتاه نمی‌کنیم؛<br/>ما شخصیت شما را در قالب هنر بازآفرینی می‌کنیم.
                </p>
              </div>
           </div>
 
-          {/* --- پرده 2: PURE --- */}
+          {/* --- بخش ۲: PURE (با متن طلایی) --- */}
           <div className="relative h-screen w-screen flex items-center justify-center flex-shrink-0 bg-[#EAEFE9]">
-             <h1 className="text-[25vw] font-black text-white/40 select-none absolute z-0" style={{ fontFamily: 'var(--font-doran)' }}>
-               PURE
-             </h1>
+             {/* عکس متن PURE */}
+             <div className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
+                <div className="relative w-[90vw] h-[50vh]">
+                  <Image src="/images/text-pure.png" alt="PURE" fill className="object-contain" />
+                </div>
+             </div>
+             
+             {/* عکس عطر معلق */}
+             <motion.div 
+               style={{ y: useTransform(scrollYProgress, [0.3, 0.6], [-50, 50]), rotate: -10 }}
+               className="absolute bottom-20 left-20 w-32 h-32 md:w-64 md:h-64 z-0 opacity-70"
+             >
+                <Image src="/images/floating-perfume.png" alt="Perfume" fill className="object-contain drop-shadow-xl" />
+             </motion.div>
+
              <div className="relative z-10 flex flex-col items-center">
-               <div className="w-64 h-80 bg-white/50 backdrop-blur-md rounded-full border border-white/40 mb-10 flex items-center justify-center shadow-xl">
-                  {/* جای عکس عطر یا محصول (اگر بود) */}
-                  <span className="font-serif italic text-brand-dark/30 text-2xl">Essence</span>
+               <div className="w-64 h-80 bg-white/40 backdrop-blur-md rounded-full border border-white/60 mb-10 flex items-center justify-center shadow-2xl">
+                  <span className="font-serif italic text-brand-dark/50 text-3xl">Pure</span>
                </div>
-               <h3 className="text-4xl font-serif text-brand-dark">رایحه اصالت</h3>
+               <h3 className="text-4xl font-serif text-brand-dark">اصالت و زیبایی</h3>
              </div>
           </div>
 
-          {/* --- پرده 3: ART --- */}
+          {/* --- بخش ۳: ART (با متن طلایی) --- */}
           <div className="relative h-screen w-screen flex items-center justify-center flex-shrink-0 bg-brand-dark text-white">
-             <h1 className="text-[25vw] font-black text-white/5 select-none absolute z-0" style={{ fontFamily: 'var(--font-doran)' }}>
-               ART
-             </h1>
-             <div className="relative z-10 max-w-2xl text-center px-6 border-y border-brand-gold/30 py-10">
+             {/* عکس متن ART (چون زمینه تیره است، شاید نیاز به افکت داشته باشد ولی فعلا خود عکس عالیه) */}
+             <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                <div className="relative w-[80vw] h-[50vh]">
+                  <Image src="/images/text-art.png" alt="ART" fill className="object-contain invert" />
+                </div>
+             </div>
+
+             <div className="relative z-10 max-w-3xl text-center px-6 border-y border-brand-gold/30 py-12">
                <p className="text-2xl md:text-4xl font-light leading-relaxed font-serif italic text-brand-gold">
-                 "زیبایی یعنی حذفِ هر چیزی که اضافیست، <br/>و درخششِ هر چیزی که واقعیست."
+                 "در آیـنـه، هر قیچی یک قلم‌مو است و صورت شما بوم نقاشی ما."
                </p>
              </div>
           </div>
 
-          {/* --- پرده 4: پایان --- */}
+          {/* --- بخش ۴: پایان --- */}
           <div className="relative h-screen w-[80vw] flex flex-col items-center justify-center flex-shrink-0 bg-brand-gold">
              <h2 className="text-5xl md:text-8xl font-black text-white mb-8 text-center" style={{ fontFamily: 'var(--font-doran)' }}>
                نوبتِ درخشش <br/> شماست

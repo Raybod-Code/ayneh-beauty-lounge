@@ -2,16 +2,15 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Playfair_Display } from "next/font/google";
 import "./globals.css";
-import SmoothScroll from "../components/SmoothScroll"; // 👈 ایمپورت کامپوننت بالا
-import CustomCursor from "@/components/CustomCursor"; // 👈 اضافه شد
-// ۱. تنظیم فونت فارسی (دوران)
+import SmoothScroll from "../components/SmoothScroll";
+import CustomCursor from "@/components/CustomCursor";
+
 const doran = localFont({
-  src: "./fonts/Doran-Variable.woff2", // فایل وریبل که توی پوشه fonts گذاشتی
+  src: "./fonts/Doran-Variable.woff2",
   variable: "--font-doran",
   display: "swap",
 });
 
-// ۲. تنظیم فونت انگلیسی لوکس (Playfair)
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
@@ -35,15 +34,14 @@ export default function RootLayout({
           ${doran.variable} 
           ${playfair.variable} 
           font-sans 
-          bg-gray-50 
-          text-gray-900 
+          bg-[#050505] 
+          text-white 
           antialiased 
           overflow-x-hidden
         `}
       >
-        {/* موتور اسکرول نرم رو اینجا صدا میزنیم */}
         <SmoothScroll />
-        <CustomCursor /> {/* 👈 اینجا اضافه‌ش کن (بالای children) */}
+        <CustomCursor />
         <div className="noise-overlay"></div>
         {children}
       </body>

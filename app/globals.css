@@ -1,24 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
   body {
-    /* 👇 رنگ زمینه اصلی سایت */
-    background-color: #F9F9F9; 
-    color: #1A1A1A;
-    font-family: var(--font-doran), sans-serif;
-  }
-}
-@layer base {
-  /* اجبار کل سایت به استفاده از فونت دوران */
-  body {
+    /* 👇 تغییر رنگ زمینه به مشکی و متن به سفید */
+    background-color: #050505; 
+    color: #ffffff;
     font-family: var(--font-doran), sans-serif;
   }
 }
 
 @layer utilities {
-  /* 👇 این بخش جادویی مشکل کارت‌ها رو حل میکنه 👇 */
-  /* ما داریم رفتار پیش‌فرض کلاس font-sans رو بازنویسی می‌کنیم */
   .font-sans {
     font-family: var(--font-doran), sans-serif !important;
   }
@@ -28,35 +21,13 @@
   }
 }
 
-افکت نویز
-.bg-noise {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-}
-
 /* مخفی کردن اسکرول بار */
 ::-webkit-scrollbar {
   width: 0px;
   background: transparent;
 }
-/* افکت نویز سفارشی */
-.bg-noise-overlay {
-  position: relative;
-}
 
-.bg-noise-overlay::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("/images/noise.png"); /* مسیر فایل نویز تو */
-  opacity: 0.04; /* شفافیت خیلی کم */
-  pointer-events: none;
-  z-index: 50;
-  mix-blend-mode: overlay;
-}
-/* 👇 افکت نویز سینمایی (بدون نیاز به فایل عکس) */
+/* افکت نویز سینمایی */
 .noise-overlay {
   position: fixed;
   top: 0;
@@ -64,7 +35,23 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 9999; /* بالاترین لایه */
-  opacity: 0.04; /* 👈 اگه خواستی کمرنگ‌تر بشه، بکن 0.04 */
+  z-index: 9999;
+  opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+@layer utilities {
+  /* مخفی کردن اسکرول‌بار اما حفظ قابلیت اسکرول */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  /* ماسک محو شدن لبه‌ها برای اسکرول افقی */
+  .mask-gradient-x {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
 }

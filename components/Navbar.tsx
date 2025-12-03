@@ -1,121 +1,85 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import LuxuryButton from "@/components/LuxuryButton";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const navLinks = [
     { name: "خانه", href: "#home" },
+    { name: "داستان", href: "#story" },
     { name: "خدمات", href: "#services" },
-    { name: "تجربه", href: "#experience" },
-    { name: "درباره ما", href: "#about" },
+    { name: "مود", href: "#mood" },
     { name: "تماس", href: "#contact" },
   ];
 
-  const handleScrollTo = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setIsOpen(false);
-    }
-  };
-
   return (
-    <>
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className={`fixed left-0 right-0 z-[100] transition-all duration-500 flex justify-center ${
-          scrolled ? "top-4 px-4" : "top-0 py-6 px-6"
-        }`}
-      >
-        <div 
-          className={`flex items-center justify-between transition-all duration-500 ${
-            scrolled 
-              ? "bg-white/80 backdrop-blur-xl shadow-lg rounded-full px-6 py-3 w-full max-w-5xl border border-white/20" 
-              : "w-full max-w-7xl bg-transparent"
-          }`}
-        >
+    <header
+      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${
+        scrolled
+          ? "bg-black/90 backdrop-blur-xl border-white/10 py-3 md:py-4 shadow-2xl"
+          : "bg-transparent border-transparent py-5 md:py-6"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <div className="flex items-center justify-between gap-4">
           {/* لوگو */}
-          <Link href="#home" className={`font-serif font-bold text-2xl tracking-tighter ${scrolled ? "text-brand-dark" : "text-white"}`}>
+          <Link
+            href="#home"
+            className="text-xl md:text-2xl font-serif font-black text-white tracking-tighter shrink-0 z-10 relative"
+          >
             AYNEH
           </Link>
 
-          {/* لینک‌های دسکتاپ (از md به بالا نشون میده) */}
-          <div className="hidden md:flex items-center gap-8">
+          {/* منوی دسکتاپ (وسط) */}
+          <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {navLinks.map((item) => (
-              <button 
-                key={item.name} 
-                onClick={() => handleScrollTo(item.href)}
-                className={`text-sm font-medium transition-colors ${
-                  scrolled ? "text-brand-dark hover:text-brand-gold" : "text-white/80 hover:text-white"
-                }`}
+              <Link
+                key={item.name}
+                href={item.href}
+                className="text-xs font-bold text-white/60 hover:text-brand-gold transition-colors tracking-[0.15em] uppercase relative group"
               >
                 {item.name}
-              </button>
+                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-brand-gold transition-all duration-300 group-hover:w-full" />
+              </Link>
             ))}
-          </div>
+          </nav>
 
-          {/* دکمه سمت چپ */}
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:block">
-              <LuxuryButton 
-                onClick={() => window.open("https://wa.me/989170000000", "_blank")}
-                variant={scrolled ? "solid" : "outline"} 
-                className={scrolled ? "py-2 px-5 text-xs bg-brand-dark text-white" : "py-2 px-6 border-white text-white hover:bg-white hover:text-black"}
-              >
-                رزرو وقت
-              </LuxuryButton>
-            </div>
-
-            {/* همبرگری موبایل (فقط زیر md) */}
-            <div className="md:hidden cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-              {isOpen ? (
-                <X className={scrolled ? "text-brand-dark" : "text-white"} />
-              ) : (
-                <Menu className={scrolled ? "text-brand-dark" : "text-white"} />
-              )}
-            </div>
+          {/* دکمه رزرو (همیشه دیده می‌شود) */}
+          <div className="shrink-0 z-10">
+            <LuxuryButton
+              onClick={() =>
+                window.open("https://wa.me/989170000000", "_blank")
+              }
+              variant="outline"
+              className="py-1.5 px-4 md:py-2 md:px-6 text-[10px] md:text-xs border-white/30 text-white hover:bg-white hover:text-black"
+            >
+              رزرو نوبت
+            </LuxuryButton>
           </div>
         </div>
-      </motion.nav>
 
-      {/* منوی موبایل (تمام صفحه) */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-brand-bg z-[90] flex flex-col items-center justify-center gap-8"
-          >
-            {navLinks.map((item, i) => (
-               <motion.button
-                 key={item.name}
-                 onClick={() => handleScrollTo(item.href)}
-                 initial={{ y: 20, opacity: 0 }}
-                 animate={{ y: 0, opacity: 1 }}
-                 transition={{ delay: i * 0.1 }}
-                 className="text-3xl font-serif font-bold text-brand-dark"
-               >
-                 {item.name}
-               </motion.button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+        {/* منوی موبایل (اسکرول افقی زیر هدر) */}
+        <div className="md:hidden mt-4 pb-1 overflow-x-auto no-scrollbar mask-gradient-x flex items-center gap-6">
+          {navLinks.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="text-xs font-medium text-white/80 whitespace-nowrap active:text-brand-gold"
+            >
+              {item.name}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </header>
   );
 }
