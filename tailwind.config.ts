@@ -12,15 +12,19 @@ const config: Config = {
         sans: ["var(--font-doran)", "sans-serif"],
         serif: ["var(--font-playfair)", "serif"],
       },
-      // 👇 پالت رنگی سلطنتی (سوفی)
+      // Royal color palette (Sophy)
       colors: {
         brand: {
-          bg: "#F9F9F9",       // زمینه اصلی (سفید گچی مات)
-          dark: "#1A1A1A",     // زغالی (برای فوتر و متن‌ها)
-          gold: "#C6A87C",     // طلایی مات (خیلی شیک و نود)
-          light: "#F5F5F0",    // کرم استخوانی (برای کارت‌ها)
-          gray: "#666666",     // طوسی برای توضیحات
+          bg: "#F9F9F9",       // Main background (matte chalk white)
+          dark: "#1A1A1A",     // Charcoal (for footer and text)
+          gold: "#C6A87C",     // Matte gold (very chic and nude)
+          light: "#F5F5F0",    // Bone cream (for cards)
+          gray: "#666666",     // Gray for descriptions
         }
+      },
+      // Added custom animation for rotating badge
+      animation: {
+        'spin-slow': 'spin 15s linear infinite',
       },
     },
   },

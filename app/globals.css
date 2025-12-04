@@ -1,57 +1,59 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* تعریف رنگ‌های برند */
+  --color-brand-bg: #050505;
+  --color-brand-dark: #0a0a0a;
+  --color-brand-gold: #C6A87C;
+  --color-brand-gray: #9CA3AF;
+  --color-brand-light: #ffffff;
+
+  /* تعریف فونت‌ها */
+  /* نکته: اینجا دوران رو به عنوان Sans پیش‌فرض ست می‌کنیم */
+  --font-sans: var(--font-doran), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
+  
+  /* انیمیشن‌ها */
+  --animate-spin-slow: spin 15s linear infinite;
+}
 
 @layer base {
+  /* تنظیمات اصلی بادی */
   body {
-    /* 👇 تغییر رنگ زمینه به مشکی و متن به سفید */
-    background-color: #050505; 
-    color: #ffffff;
-    font-family: var(--font-doran), sans-serif;
+    font-family: var(--font-doran), sans-serif; /* اجبار فونت دوران */
+    background-color: var(--color-brand-bg);
+    color: var(--color-brand-light);
   }
-}
 
-@layer utilities {
-  .font-sans {
-    font-family: var(--font-doran), sans-serif !important;
-  }
-  
+  /* تنظیم فونت انگلیسی برای متون خاص */
   .font-serif {
-    font-family: var(--font-playfair), serif !important;
+    font-family: var(--font-playfair), serif;
   }
 }
 
-/* مخفی کردن اسکرول بار */
-::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
-}
-
-/* افکت نویز سینمایی */
-.noise-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.05;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-}
 @layer utilities {
-  /* مخفی کردن اسکرول‌بار اما حفظ قابلیت اسکرول */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-
-  /* ماسک محو شدن لبه‌ها برای اسکرول افقی */
+  
   .mask-gradient-x {
     mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
   }
+}
+
+/* افکت نویز */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }

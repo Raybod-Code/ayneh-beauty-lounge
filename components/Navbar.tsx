@@ -2,84 +2,97 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import LuxuryButton from "@/components/LuxuryButton";
+import { motion, AnimatePresence } from "framer-motion";
+import { NAV_LINKS } from "@/app/constants";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: "خانه", href: "#home" },
-    { name: "داستان", href: "#story" },
-    { name: "خدمات", href: "#services" },
-    { name: "مود", href: "#mood" },
-    { name: "تماس", href: "#contact" },
-  ];
-
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${
-        scrolled
-          ? "bg-black/90 backdrop-blur-xl border-white/10 py-3 md:py-4 shadow-2xl"
-          : "bg-transparent border-transparent py-5 md:py-6"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <div className="flex items-center justify-between gap-4">
-          {/* لوگو */}
-          <Link
-            href="#home"
-            className="text-xl md:text-2xl font-serif font-black text-white tracking-tighter shrink-0 z-10 relative"
-          >
-            AYNEH
-          </Link>
-
-          {/* منوی دسکتاپ (وسط) */}
-          <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
-            {navLinks.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-xs font-bold text-white/60 hover:text-brand-gold transition-colors tracking-[0.15em] uppercase relative group"
-              >
-                {item.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-brand-gold transition-all duration-300 group-hover:w-full" />
+    <div className="fixed top-6 left-0 right-0 z-[100] flex justify-center pointer-events-none">
+      <motion.nav
+        layout
+        initial={{ width: "90%", borderRadius: "24px", y: 0 }}
+        animate={{
+          width: scrolled ? "auto" : "90%", // در حالت اسکرول جمع‌وجور میشه
+          borderRadius: "50px",
+          y: scrolled ? 0 : 10,
+          backgroundColor: scrolled ? "rgba(15, 15, 15, 0.8)" : "transparent",
+          backdropFilter: scrolled ? "blur(20px)" : "blur(0px)",
+          border: scrolled ? "1px solid rgba(255,255,255,0.1)" : "1px solid transparent",
+          padding: scrolled ? "8px 12px" : "20px 40px",
+        }}
+        transition={{ type: "spring", stiffness: 120, damping: 20 }}
+        className="pointer-events-auto flex items-center justify-between max-w-5xl mx-auto"
+      >
+        
+        {/* لوگو - فقط وقتی اسکرول نشده نشون داده میشه تا جا باز شه */}
+        <AnimatePresence>
+          {!scrolled && (
+            <motion.div
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              className="hidden md:block mr-12 shrink-0 overflow-hidden"
+            >
+              <Link href="/" className="text-2xl font-black font-serif text-white tracking-tighter">
+                AYNEH
               </Link>
-            ))}
-          </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          {/* دکمه رزرو (همیشه دیده می‌شود) */}
-          <div className="shrink-0 z-10">
-            <LuxuryButton
-              onClick={() =>
-                window.open("https://wa.me/989170000000", "_blank")
-              }
-              variant="outline"
-              className="py-1.5 px-4 md:py-2 md:px-6 text-[10px] md:text-xs border-white/30 text-white hover:bg-white hover:text-black"
-            >
-              رزرو نوبت
-            </LuxuryButton>
-          </div>
-        </div>
-
-        {/* منوی موبایل (اسکرول افقی زیر هدر) */}
-        <div className="md:hidden mt-4 pb-1 overflow-x-auto no-scrollbar mask-gradient-x flex items-center gap-6">
-          {navLinks.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="text-xs font-medium text-white/80 whitespace-nowrap active:text-brand-gold"
-            >
-              {item.name}
-            </Link>
+        {/* لینک‌ها - با افکت Sliding Tab */}
+        <ul className="flex items-center gap-1 md:gap-2 overflow-x-auto no-scrollbar mask-gradient-x w-full md:w-auto">
+          {NAV_LINKS.map((link) => (
+            <li key={link.name} className="relative shrink-0">
+              <Link
+                href={link.href}
+                className="relative z-10 block px-4 py-2 text-xs md:text-sm font-medium text-white/70 hover:text-white transition-colors"
+                onMouseEnter={() => setHoveredLink(link.name)}
+                onMouseLeave={() => setHoveredLink(null)}
+              >
+                {link.name}
+              </Link>
+              
+              {/* اون هاله متحرک پشت لینک */}
+              {hoveredLink === link.name && (
+                <motion.div
+                  layoutId="navbar-hover"
+                  className="absolute inset-0 bg-white/10 rounded-full z-0"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+            </li>
           ))}
+        </ul>
+
+        {/* دکمه رزرو - همیشه هست */}
+        <div className={`shrink-0 ${scrolled ? "ml-2" : "ml-12"}`}>
+          <button 
+            onClick={() => window.open("https://wa.me/989170000000", "_blank")}
+            className={`
+              relative overflow-hidden rounded-full font-bold text-xs tracking-wider uppercase transition-all duration-300
+              ${scrolled 
+                ? "bg-brand-gold text-black px-5 py-2.5 hover:bg-white" 
+                : "border border-white/30 text-white px-6 py-3 hover:bg-white hover:text-black"
+              }
+            `}
+          >
+            رزرو
+          </button>
         </div>
-      </div>
-    </header>
+
+      </motion.nav>
+    </div>
   );
 }

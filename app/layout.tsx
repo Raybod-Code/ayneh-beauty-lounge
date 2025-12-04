@@ -5,12 +5,14 @@ import "./globals.css";
 import SmoothScroll from "../components/SmoothScroll";
 import CustomCursor from "@/components/CustomCursor";
 
+// تنظیم فونت فارسی (دوران)
 const doran = localFont({
   src: "./fonts/Doran-Variable.woff2",
-  variable: "--font-doran",
+  variable: "--font-doran", // این اسم متغیر خیلی مهمه
   display: "swap",
 });
 
+// تنظیم فونت انگلیسی (پلی‌فیر)
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
@@ -28,18 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fa" dir="rtl">
-      <body
-        className={`
-          ${doran.variable} 
-          ${playfair.variable} 
-          font-sans 
-          bg-[#050505] 
-          text-white 
-          antialiased 
-          overflow-x-hidden
-        `}
-      >
+    <html lang="fa" dir="rtl" className={`${doran.variable} ${playfair.variable}`}>
+      <body className="bg-[#050505] text-white antialiased overflow-x-hidden selection:bg-[#C6A87C] selection:text-black">
         <SmoothScroll />
         <CustomCursor />
         <div className="noise-overlay"></div>

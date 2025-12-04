@@ -1,93 +1,107 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Image from "next/image";
 
 export default function ArtTunnel() {
   const targetRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: targetRef });
+  
+  // هوک اسکرول برای کل سکشن
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+  });
 
-  // اسکرول افقی
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-75%"]);
+  // تبدیل اسکرول عمودی به حرکت افقی (فقط برای دسکتاپ)
+  // ما ۳ تا اسلاید داریم، پس باید تا حدود -200% (یا -66% بسته به ویوپورت) بریم
+  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-200%"]);
+  
+  // نرم‌کننده حرکت (Physics)
+  const smoothX = useSpring(x, { stiffness: 100, damping: 30, mass: 0.5 });
+
+  // پارالاکس برای المان‌های معلق (حرکت مخالف جهت اسکرول)
+  const parallax = useTransform(scrollYProgress, [0, 1], [200, -200]);
 
   return (
-    <section ref={targetRef} className="relative h-[300vh] bg-brand-light">
-      <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+    // ارتفاع 300vh یعنی ۳ برابر ارتفاع صفحه اسکرول داریم (برای ۳ اسلاید)
+    // در موبایل ارتفاع auto میشه چون اسکرول افقی نداریم
+    <section ref={targetRef} className="relative md:h-[300vh] bg-brand-light">
+      
+      {/* کانتینر چسبنده (Sticky) فقط برای دسکتاپ */}
+      <div className="md:sticky md:top-0 md:h-screen md:overflow-hidden bg-[#F5F5F0]">
         
-        <motion.div style={{ x }} className="flex">
+        {/* کانتینر متحرک افقی */}
+        <motion.div 
+          style={{ x: smoothX }} 
+          className="flex flex-col md:flex-row h-auto md:h-full"
+          // در موبایل استایل x رو غیرفعال می‌کنیم (با کلاس md: هندل شده اما برای اطمینان)
+        >
           
-          {/* --- بخش ۱: STYLE (با متن طلایی) --- */}
-          <div className="relative h-screen w-screen flex items-center justify-center flex-shrink-0 bg-[#F5F5F0]">
-             {/* عکس متن STYLE */}
-             <div className="absolute inset-0 flex items-center justify-center opacity-10 md:opacity-20 pointer-events-none">
-                <div className="relative w-[90vw] h-[50vh]">
-                  <Image src="/images/text-style.png" alt="STYLE" fill className="object-contain" />
-                </div>
+          {/* === اسلاید ۱: STYLE === */}
+          <div className="relative w-full md:w-screen h-screen md:h-full flex items-center justify-center flex-shrink-0 overflow-hidden border-b md:border-b-0 border-black/5">
+             {/* متن پس‌زمینه */}
+             <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] select-none pointer-events-none">
+                <Image src="/images/text-style.png" alt="STYLE" width={1000} height={400} className="object-contain w-[90vw]" />
              </div>
 
-             {/* عکس براش آرایشی معلق */}
+             {/* عکس براش معلق (پارالاکس) */}
              <motion.div 
-               style={{ x: useTransform(scrollYProgress, [0, 0.3], [200, -200]), rotate: 15 }} 
-               className="absolute top-20 right-20 w-40 h-40 md:w-80 md:h-80 z-0 opacity-80"
+               style={{ x: parallax, rotate: 15 }} 
+               className="absolute top-[10%] right-[5%] md:top-20 md:right-40 w-40 h-40 md:w-80 md:h-80 z-10 hidden md:block"
              >
-                <Image src="/images/floating-brush.png" alt="Brush" fill className="object-contain drop-shadow-xl" />
+                <Image src="/images/floating-brush.png" alt="Brush" fill className="object-contain drop-shadow-2xl" />
              </motion.div>
 
-             <div className="relative z-10 max-w-xl text-center px-6">
-               <h3 className="text-5xl md:text-7xl font-serif text-brand-dark mb-6">استایلِ تو</h3>
-               <p className="text-brand-gray text-lg leading-loose">
-                 ما فقط موها را کوتاه نمی‌کنیم؛<br/>ما شخصیت شما را در قالب هنر بازآفرینی می‌کنیم.
+             <div className="relative z-20 max-w-xl text-center px-6">
+               <span className="text-brand-gold text-xs tracking-[0.3em] uppercase block mb-4">Precision</span>
+               <h3 className="text-5xl md:text-8xl font-serif text-brand-dark mb-6 tracking-tighter">
+                 استایلِ <span className="italic text-brand-gold">تو</span>
+               </h3>
+               <p className="text-gray-500 text-sm md:text-lg leading-loose font-sans">
+                 ما فقط موها را کوتاه نمی‌کنیم؛<br/>
+                 ما شخصیت شما را در قالب هنر بازآفرینی می‌کنیم.
                </p>
              </div>
           </div>
 
-          {/* --- بخش ۲: PURE (با متن طلایی) --- */}
-          <div className="relative h-screen w-screen flex items-center justify-center flex-shrink-0 bg-[#EAEFE9]">
-             {/* عکس متن PURE */}
-             <div className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
-                <div className="relative w-[90vw] h-[50vh]">
-                  <Image src="/images/text-pure.png" alt="PURE" fill className="object-contain" />
-                </div>
+          {/* === اسلاید ۲: PURE === */}
+          <div className="relative w-full md:w-screen h-screen md:h-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-[#EAEFE9] border-b md:border-b-0 border-black/5">
+             <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] select-none pointer-events-none">
+                <Image src="/images/text-pure.png" alt="PURE" width={1000} height={400} className="object-contain w-[90vw]" />
              </div>
              
              {/* عکس عطر معلق */}
              <motion.div 
-               style={{ y: useTransform(scrollYProgress, [0.3, 0.6], [-50, 50]), rotate: -10 }}
-               className="absolute bottom-20 left-20 w-32 h-32 md:w-64 md:h-64 z-0 opacity-70"
+               style={{ y: parallax, rotate: -10 }}
+               className="absolute bottom-[10%] left-[5%] md:bottom-20 md:left-40 w-32 h-32 md:w-64 md:h-64 z-10 hidden md:block"
              >
-                <Image src="/images/floating-perfume.png" alt="Perfume" fill className="object-contain drop-shadow-xl" />
+                <Image src="/images/floating-perfume.png" alt="Perfume" fill className="object-contain drop-shadow-2xl" />
              </motion.div>
 
-             <div className="relative z-10 flex flex-col items-center">
-               <div className="w-64 h-80 bg-white/40 backdrop-blur-md rounded-full border border-white/60 mb-10 flex items-center justify-center shadow-2xl">
+             <div className="relative z-20 flex flex-col items-center">
+               <div className="w-48 h-64 md:w-64 md:h-80 bg-white/40 backdrop-blur-md rounded-full border border-white/60 mb-8 flex items-center justify-center shadow-2xl">
                   <span className="font-serif italic text-brand-dark/50 text-3xl">Pure</span>
                </div>
-               <h3 className="text-4xl font-serif text-brand-dark">اصالت و زیبایی</h3>
+               <h3 className="text-3xl md:text-5xl font-serif text-brand-dark">اصالت و زیبایی</h3>
              </div>
           </div>
 
-          {/* --- بخش ۳: ART (با متن طلایی) --- */}
-          <div className="relative h-screen w-screen flex items-center justify-center flex-shrink-0 bg-brand-dark text-white">
-             {/* عکس متن ART (چون زمینه تیره است، شاید نیاز به افکت داشته باشد ولی فعلا خود عکس عالیه) */}
-             <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-                <div className="relative w-[80vw] h-[50vh]">
-                  <Image src="/images/text-art.png" alt="ART" fill className="object-contain invert" />
-                </div>
+          {/* === اسلاید ۳: ART === */}
+          <div className="relative w-full md:w-screen h-screen md:h-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-[#1a1a1a] text-white">
+             <div className="absolute inset-0 flex items-center justify-center opacity-10 select-none pointer-events-none">
+                <Image src="/images/text-art.png" alt="ART" width={1000} height={400} className="object-contain w-[80vw] invert" />
              </div>
 
-             <div className="relative z-10 max-w-3xl text-center px-6 border-y border-brand-gold/30 py-12">
-               <p className="text-2xl md:text-4xl font-light leading-relaxed font-serif italic text-brand-gold">
-                 "در آیـنـه، هر قیچی یک قلم‌مو است و صورت شما بوم نقاشی ما."
+             <div className="relative z-20 max-w-4xl text-center px-6 py-12">
+               <p className="text-2xl md:text-5xl font-light leading-relaxed font-serif italic text-brand-gold">
+                 "در آیـنـه، هر قیچی یک قلم‌مو است <br/> و صورت شما بوم نقاشی ما."
                </p>
+               <div className="mt-10">
+                 <button className="px-8 py-3 rounded-full border border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-black transition-all duration-300 uppercase tracking-widest text-xs">
+                   شروع تغییر
+                 </button>
+               </div>
              </div>
-          </div>
-
-          {/* --- بخش ۴: پایان --- */}
-          <div className="relative h-screen w-[80vw] flex flex-col items-center justify-center flex-shrink-0 bg-brand-gold">
-             <h2 className="text-5xl md:text-8xl font-black text-white mb-8 text-center" style={{ fontFamily: 'var(--font-doran)' }}>
-               نوبتِ درخشش <br/> شماست
-             </h2>
           </div>
 
         </motion.div>

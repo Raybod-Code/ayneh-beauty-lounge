@@ -4,116 +4,121 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
-
-const MOODS = [
-  {
-    id: "01",
-    title: "جسور و خاص",
-    en: "BOLD",
-    desc: "کوتاهی‌های ژورنالی و رنگ‌های فشن برای تغییری چشمگیر.",
-    image: "/images/service-haircut.png",
-  },
-  {
-    id: "02",
-    title: "آرامش مطلق",
-    en: "RELAX",
-    desc: "یک ساعت اسپا و ماساژ سر برای فرار از هیاهوی شهر.",
-    image: "/images/service-spa.png",
-  },
-  {
-    id: "03",
-    title: "درخشش طبیعی",
-    en: "GLOW",
-    desc: "احیای مو و فیشال تخصصی پوست برای درخششی ماندگار.",
-    image: "/images/service-color.png",
-  },
-  {
-    id: "04",
-    title: "شکوه عروس",
-    en: "ROYAL",
-    desc: "پکیج VIP میکاپ و شینیون برای مهم‌ترین شب زندگی.",
-    image: "/images/service-bridal.png",
-  },
-];
+import { MOODS } from "@/app/constants";
 
 export default function MoodSelector() {
   const [activeMood, setActiveMood] = useState(MOODS[0]);
 
   return (
-    <section className="relative bg-[#050505] py-20 md:py-32 px-4 md:px-6 border-t border-white/5">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-10 md:gap-24">
+    <section className="relative py-24 md:py-40 px-6 bg-brand-bg overflow-hidden">
+      
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 lg:gap-24">
         
-        {/* --- ستون تصویر (نمایشگر) --- */}
-        {/* در موبایل ارتفاعش کمتره، در دسکتاپ بلنده و Sticky */}
-        <div className="w-full md:w-5/12 h-[300px] md:h-[600px] relative rounded-[2rem] overflow-hidden md:sticky md:top-32 shadow-2xl order-1 md:order-1">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeMood.id}
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="absolute inset-0"
-            >
-              <Image 
-                src={activeMood.image} 
-                alt={activeMood.title} 
-                fill 
-                className="object-cover grayscale hover:grayscale-0 transition-all duration-700"
-              />
-              
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-              
-              <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10">
-                <h3 className="text-5xl md:text-8xl font-black text-white/20 font-sans tracking-tighter select-none">
-                  {activeMood.en}
-                </h3>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* --- ستون لیست (انتخابگر) --- */}
-        <div className="w-full md:w-7/12 flex flex-col justify-center py-0 md:py-10 order-2 md:order-2">
-          <div className="mb-8 md:mb-16 text-center md:text-right">
-            <span className="text-brand-gold text-[10px] md:text-xs tracking-[0.4em] uppercase block mb-3">
+        {/* ستون چپ: لیست انتخابگر (Tab List) */}
+        <div className="w-full lg:w-1/2 flex flex-col justify-center z-10 order-2 lg:order-1">
+          <div className="mb-12">
+            <span className="text-brand-gold text-xs tracking-[0.4em] uppercase mb-4 block">
               Curated Experience
             </span>
-            <h2 className="text-3xl md:text-6xl font-serif text-white">
-              انتخاب <span className="italic text-brand-gold">احساس</span>
+            <h2 className="text-4xl md:text-6xl font-serif text-white mb-6">
+              امروز چه <span className="italic text-brand-gold">حسی</span> دارید؟
             </h2>
+            <p className="text-brand-gray font-light text-sm md:text-base leading-relaxed max-w-md">
+              خدمات ما بر اساس حال و هوای شما شخصی‌سازی می‌شوند. مود خود را انتخاب کنید.
+            </p>
           </div>
 
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-2">
             {MOODS.map((mood) => (
               <div 
                 key={mood.id}
-                // در موبایل با کلیک، در دسکتاپ با هاور
                 onClick={() => setActiveMood(mood)}
-                onMouseEnter={() => setActiveMood(mood)}
-                className={`group cursor-pointer border-b border-white/10 py-5 md:py-8 transition-all duration-500 
-                  ${activeMood.id === mood.id ? 'opacity-100 bg-white/5 md:bg-transparent rounded-xl md:rounded-none px-4 md:px-4' : 'opacity-50 hover:opacity-80 px-2'}`}
+                className={`
+                  group cursor-pointer relative p-6 md:p-8 rounded-3xl transition-all duration-500 border border-transparent
+                  ${activeMood.id === mood.id ? "bg-white/5 border-white/10" : "hover:bg-white/[0.02]"}
+                `}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs text-brand-gold font-mono">{mood.id}</span>
-                    <h3 className={`text-xl md:text-4xl font-serif transition-colors ${activeMood.id === mood.id ? 'text-white' : 'text-gray-500'}`}>
+                {/* هدر آیتم */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-6">
+                    <span className={`text-sm font-mono transition-colors ${activeMood.id === mood.id ? "text-brand-gold" : "text-gray-600"}`}>
+                      0{MOODS.indexOf(mood) + 1}
+                    </span>
+                    <h3 className={`text-2xl md:text-4xl font-serif transition-colors ${activeMood.id === mood.id ? "text-white" : "text-gray-500 group-hover:text-gray-300"}`}>
                       {mood.title}
                     </h3>
                   </div>
+                  
+                  {/* فلش که فقط وقتی فعاله میاد */}
                   <ArrowLeft 
-                    size={20}
-                    className={`text-brand-gold transition-transform duration-300 ${activeMood.id === mood.id ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} 
+                    className={`
+                      text-brand-gold transition-all duration-300 
+                      ${activeMood.id === mood.id ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"}
+                    `} 
                   />
                 </div>
-                
-                <div className={`overflow-hidden transition-all duration-500 ${activeMood.id === mood.id ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <p className="text-gray-400 font-light text-xs md:text-lg leading-relaxed max-w-md mr-8 md:mr-10">
-                    {mood.desc}
+
+                {/* توضیحات (آکاردئونی باز میشه) */}
+                <div 
+                  className={`
+                    overflow-hidden transition-all duration-500 ease-in-out
+                    ${activeMood.id === mood.id ? "max-h-24 opacity-100 mt-4" : "max-h-0 opacity-0 mt-0"}
+                  `}
+                >
+                  <p className="text-brand-gray font-sans text-sm font-light pr-12 leading-relaxed">
+                    {mood.description}
                   </p>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* ستون راست: نمایشگر تصویر (Visual Display) */}
+        <div className="w-full lg:w-1/2 h-[400px] lg:h-[700px] relative order-1 lg:order-2">
+          {/* کانتینر چسبنده برای دسکتاپ */}
+          <div className="sticky top-24 w-full h-full">
+            
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeMood.id}
+                initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
+                transition={{ duration: 0.7, ease: "circOut" }}
+                className="relative w-full h-full rounded-[3rem] overflow-hidden"
+              >
+                <Image 
+                  src={activeMood.image} 
+                  alt={activeMood.title} 
+                  fill 
+                  className="object-cover"
+                  priority
+                />
+                
+                {/* گرادینت تیره روی عکس */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                
+                {/* متن انگلیسی بزرگ روی عکس */}
+                <div className="absolute bottom-8 left-8 md:bottom-12 md:left-12 z-20">
+                  <motion.h3 
+                    initial={{ y: 40, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.8 }}
+                    className="text-6xl md:text-9xl font-black text-white/10 font-sans tracking-tighter select-none"
+                  >
+                    {activeMood.enTitle}
+                  </motion.h3>
+                </div>
+
+                {/* افکت نوری رنگی پشت عکس (Glow) */}
+                <div 
+                  className="absolute -inset-10 -z-10 opacity-30 blur-[100px] transition-colors duration-1000"
+                  style={{ backgroundColor: activeMood.color }}
+                />
+              </motion.div>
+            </AnimatePresence>
+
           </div>
         </div>
 
