@@ -32,7 +32,7 @@ export default function Services() {
       {/* هدر بخش - کاملاً ریسپانسیو */}
       <div className="max-w-7xl mx-auto mb-16 md:mb-20 flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/10 pb-8">
         <div>
-          <h2 className="text-4xl md:text-7xl font-light mb-4 text-white font-serif">
+          <h2 className="text-4xl md:text-7xl font-light mb-4 text-white font-sans font-black">
             خدمات ما
           </h2>
           <p className="text-brand-gray text-base md:text-lg font-sans max-w-sm md:max-w-none">

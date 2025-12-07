@@ -116,7 +116,7 @@ export default function HeroSection() {
         transition={{ delay: 0.8, duration: 1 }}
         className="absolute bottom-12 md:bottom-16 z-40 text-center px-6 max-w-2xl"
       >
-        <h2 className="text-xl md:text-3xl font-serif text-white/90 mb-3 tracking-wide leading-relaxed">
+        <h2 className="text-xl md:text-3xl font-sans font-bold text-white/90 mb-3 tracking-wide leading-relaxed">
           جایی که زیبایی، <br className="md:hidden"/> بازتابِ <span className="text-brand-gold italic">درون</span> توست
         </h2>
         <p className="text-[10px] md:text-xs text-gray-500 font-sans tracking-[0.3em] uppercase mb-6">
