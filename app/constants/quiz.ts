@@ -8,7 +8,6 @@ export type RecommendationType = {
   tags: string[];
 };
 
-// پیشنهادات نهایی (هم مو، هم ناخن)
 export const RECOMMENDATIONS: Record<string, RecommendationType> = {
   // --- Hair Recommendations ---
   "hair_revival": {
@@ -33,31 +32,31 @@ export const RECOMMENDATIONS: Record<string, RecommendationType> = {
     tags: ["hair", "daily"],
   },
 
-  // --- Nail Recommendations ---
+  // --- Nail Recommendations (Local Images) ---
   "nail_extension": {
     title: "کاشت ژل روسی (Russian Gel)",
     description: "برای داشتن ناخن‌هایی بلند، ظریف و بسیار مقاوم. مناسب برای کسانی که صدف ناخن کوتاه دارند.",
     priceRange: "۸۰۰ - ۱.۲۰۰",
-    image: "https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=800",
+    image: "/images/service-bridal.png", // موقت: حس ظرافت
     tags: ["nail", "long"],
   },
   "nail_therapy": {
     title: "لمینت و مانیکور خیس",
     description: "استحکام‌سازی ناخن طبیعی بدون افزایش قد. ظاهری نچرال و بسیار شیک.",
     priceRange: "۴۵۰ - ۷۰۰",
-    image: "https://images.pexels.com/photos/939836/pexels-photo-939836.jpeg?auto=compress&cs=tinysrgb&w=800",
+    image: "/images/service-spa.png", // موقت: حس سلامت
     tags: ["nail", "natural"],
   },
   "nail_art": {
     title: "ژلیش با طراحی کروم/فرنچ",
     description: "یک دیزاین ترندی و خاص. پیشنهاد ما: فرنچ رنگی یا پودر کروم روی ناخن طبیعی.",
     priceRange: "۳۵۰ - ۶۰۰",
-    image: "https://images.pexels.com/photos/704815/pexels-photo-704815.jpeg?auto=compress&cs=tinysrgb&w=800",
+    image: "/images/service-color.png", // موقت: حس رنگ و هنر
     tags: ["nail", "art"],
   },
 };
 
-// سوالات دسته‌بندی شده (ایموجی‌ها حذف شدند و با کلید جایگزین شدند)
+// سوالات (بدون تغییر، فقط برای اطمینان دوباره می‌گذارم)
 export const QUIZ_DATA = {
   hair: [
     {

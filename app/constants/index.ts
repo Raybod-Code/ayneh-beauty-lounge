@@ -1,69 +1,108 @@
+// app/constants/index.ts
+
 export const SERVICES = [
-  // --- Hair Services ---
   {
     id: 1,
-    title: "هیرکات و استایل ژورنالی",
+    title: "هیرکات ژورنالی",
     category: "Haircut & Style",
     price: "از ۴۵۰",
     image: "/images/service-haircut.png",
   },
   {
     id: 2,
-    title: "رنگ، لایت و آمبره روسی",
+    title: "رنگ و لایت آمبره",
     category: "Color & Light",
     price: "از ۲.۵۰۰",
     image: "/images/service-color.png",
   },
   {
     id: 3,
-    title: "تراپی، کراتین و احیا",
+    title: "تراپی و احیا",
     category: "Treatments",
     price: "از ۳.۰۰۰",
     image: "/images/service-spa.png",
   },
   {
     id: 4,
-    title: "پکیج عروس VIP",
-    category: "Bridal",
+    title: "میکاپ عروس",
+    category: "Bridal Makeup",
     price: "مشاوره حضوری",
     image: "/images/service-bridal.png",
   },
-  // --- Nail Services (New) ---
   {
     id: 5,
     title: "کاشت پودر و ژل",
     category: "Nail Extensions",
     price: "از ۶۰۰",
-    image: "https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=800", // Nail Image 1
+    image: "/images/service-bridal.png", 
   },
   {
     id: 6,
     title: "لمینت و استحکام‌سازی",
     category: "Nail Therapy",
     price: "از ۴۰۰",
-    image: "https://images.pexels.com/photos/939836/pexels-photo-939836.jpeg?auto=compress&cs=tinysrgb&w=800", // Nail Image 2
+    image: "/images/service-spa.png",
   },
   {
     id: 7,
     title: "طراحی و نیل‌آرت تخصصی",
     category: "Nail Art",
     price: "از ۵۰ / ناخن",
-    image: "https://images.pexels.com/photos/704815/pexels-photo-704815.jpeg?auto=compress&cs=tinysrgb&w=800", // Nail Image 3
+    image: "/images/service-color.png",
   },
   {
     id: 8,
     title: "پدیکور VIP و کفسابی",
     category: "Pedicure & Spa",
     price: "از ۵۰۰",
-    image: "https://images.pexels.com/photos/7290089/pexels-photo-7290089.jpeg?auto=compress&cs=tinysrgb&w=800", // Pedicure Image
+    image: "/images/service-spa.png",
+  },
+];
+
+// 👇 محصولات بوتیک (جدید)
+export const PRODUCTS = [
+  {
+    id: 1,
+    title: "شامپو احیاکننده خاویار",
+    enTitle: "Caviar Repair Shampoo",
+    price: "۱.۸۵۰.۰۰۰",
+    category: "Shampoo",
+    image: "/images/service-spa.png", // بافت کرمی و لوکس
+    description: "غنی شده با عصاره خاویار سیاه برای بازسازی عمیق فیبر مو.",
+  },
+  {
+    id: 2,
+    title: "الکسیر طلای آرگان",
+    enTitle: "Golden Argan Elixir",
+    price: "۲.۴۰۰.۰۰۰",
+    category: "Oil & Serum",
+    image: "/images/floating-perfume.png", // بطری شیشه‌ای (عالی برای روغن)
+    description: "طلای مایع مراکش. درخشش آنی بدون ایجاد چربی.",
+  },
+  {
+    id: 3,
+    title: "ماسک موی کراتین خالص",
+    enTitle: "Pure Keratin Mask",
+    price: "۱.۶۰۰.۰۰۰",
+    category: "Mask",
+    image: "/images/service-color.png", // بافت رنگی و غلیظ
+    description: "بمب آبرسان برای موهای دکلره و آسیب‌دیده.",
+  },
+  {
+    id: 4,
+    title: "اسپری محافظ حرارت",
+    enTitle: "Heat Shield Mist",
+    price: "۹۵۰.۰۰۰",
+    category: "Styling",
+    image: "/images/floating-brush.png", // ابزار استایل
+    description: "محافظ نامرئی در برابر سشوار و اتو مو تا ۲۳۰ درجه.",
   },
 ];
 
 export const NAV_LINKS = [
-  { name: "خانه", href: "#home" },
-  { name: "خدمات مو", href: "#services" },
-  { name: "ناخن و اسپا", href: "#gallery" }, // هدایت به گالری یا سکشن جدید
-  { name: "مشاوره هوشمند", href: "#quiz" }, // لینک جدید برای دسترسی سریع
+  { name: "خانه", href: "/" },
+  { name: "خدمات", href: "/#services" },
+  { name: "فروشگاه", href: "/shop" }, // 👈 لینک جدید فروشگاه
   { name: "تماس", href: "#contact" },
 ];
 

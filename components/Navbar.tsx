@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // 👈 برای هدایت به صفحه رزرو
 import { motion, AnimatePresence } from "framer-motion";
 import { NAV_LINKS } from "@/app/constants";
+import { User } from "lucide-react"; // 👈 آیکون پروفایل
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const router = useRouter(); // 👈 هوک مسیریابی
 
   useEffect(() => {
     const handleScroll = () => {
@@ -76,10 +79,26 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* دکمه رزرو - همیشه هست */}
-        <div className={`shrink-0 ${scrolled ? "ml-2" : "ml-12"}`}>
+        {/* دکمه‌های سمت چپ (رزرو + پروفایل) */}
+        <div className={`shrink-0 flex items-center gap-3 ${scrolled ? "ml-2" : "ml-12"}`}>
+          
+          {/* دکمه پروفایل/ورود */}
+          <Link 
+            href="/login" 
+            className={`
+              flex items-center justify-center rounded-full border transition-all duration-300 group
+              ${scrolled 
+                ? "w-9 h-9 border-white/20 bg-white/5 hover:bg-white hover:text-black text-white" 
+                : "w-11 h-11 border-white/30 text-white hover:bg-white hover:text-black"
+              }
+            `}
+          >
+            <User size={scrolled ? 16 : 18} />
+          </Link>
+
+          {/* دکمه رزرو */}
           <button 
-            onClick={() => window.open("https://wa.me/989170000000", "_blank")}
+            onClick={() => router.push("/booking")} // 👈 تغییر مسیر به صفحه رزرو داخلی
             className={`
               relative overflow-hidden rounded-full font-bold text-xs tracking-wider uppercase transition-all duration-300
               ${scrolled 
@@ -88,7 +107,7 @@ export default function Navbar() {
               }
             `}
           >
-            رزرو
+            رزرو آنلاین
           </button>
         </div>
 
