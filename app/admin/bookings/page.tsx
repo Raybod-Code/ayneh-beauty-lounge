@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Calendar, Clock, User, CheckCircle, XCircle, MoreVertical, Search, Plus, X, Filter, Ticket, Download, Share2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Calendar, Clock, User, MoreVertical, Search, Plus, X, Filter, Ticket, Download, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import { DigitalTicket } from "@/components/DigitalTicket";
 
-// داده‌های نمایشی (همان قبلی‌ها)
+// داده‌های اولیه (رزروهای قدیمی)
 const INITIAL_BOOKINGS = [
   { id: 1, customer: "سارا محمدی", service: "رنگ و لایت", stylist: "الناز", date: "1402/10/25", time: "14:00", status: "pending", phone: "0912..." },
   { id: 2, customer: "مینا راد", service: "هیرکات", stylist: "سارا", date: "1402/10/25", time: "15:30", status: "confirmed", phone: "0935..." },
@@ -17,11 +17,28 @@ const INITIAL_BOOKINGS = [
 export default function BookingsPage() {
   const [bookings, setBookings] = useState(INITIAL_BOOKINGS);
   const [filter, setFilter] = useState("all");
-  const [isModalOpen, setIsModalOpen] = useState(false); // استیت مودال نوبت جدید
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // --- استیت‌های جدید برای کارت دعوت ---
-  const [ticketData, setTicketData] = useState<any>(null); // نوبت انتخاب شده برای چاپ
-  const ticketRef = useRef<HTMLDivElement>(null); // رفرنس برای عکس‌برداری
+  // استیت‌های کارت دعوت
+  const [ticketData, setTicketData] = useState<any>(null);
+  const ticketRef = useRef<HTMLDivElement>(null);
+
+  // ✅ لود کردن رزروهای جدید از LocalStorage
+  useEffect(() => {
+    // خواندن رزروهای ذخیره شده توسط کاربر
+    const localBookings = JSON.parse(localStorage.getItem("ayneh-bookings") || "[]");
+    
+    if (localBookings.length > 0) {
+      // اضافه کردن رزروهای جدید به ابتدای لیست
+      setBookings((prev) => {
+        // جلوگیری از تکراری شدن (اختیاری)
+        const combined = [...localBookings, ...INITIAL_BOOKINGS];
+        // حذف تکراری‌ها بر اساس ID (برای اطمینان)
+        const unique = combined.filter((v,i,a)=>a.findIndex(v2=>(v2.id===v.id))===i);
+        return unique;
+      });
+    }
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -43,15 +60,19 @@ export default function BookingsPage() {
     }
   };
 
-  // 📸 تابع دانلود کارت دعوت
+  // دانلود کارت دعوت از ادمین
   const handleDownloadTicket = async () => {
     if (!ticketRef.current || !ticketData) return;
     
     try {
       const canvas = await html2canvas(ticketRef.current, {
         scale: 2,
-        backgroundColor: null,
-        useCORS: true
+        backgroundColor: '#050505',
+        useCORS: true,
+        onclone: (doc) => {
+            const el = doc.getElementById('digital-ticket-id');
+            if(el) el.style.color = '#ffffff';
+        }
       });
 
       const data = canvas.toDataURL('image/jpeg', 0.95);
@@ -67,7 +88,6 @@ export default function BookingsPage() {
     }
   };
 
-  // باز کردن مودال کارت دعوت
   const openTicketModal = (booking: any) => {
     setTicketData({
       name: booking.customer,
@@ -75,7 +95,7 @@ export default function BookingsPage() {
       date: booking.date,
       time: booking.time,
       stylist: booking.stylist,
-      bookingId: booking.id.toString()
+      bookingId: booking.bookingId || booking.id.toString()
     });
   };
 
@@ -84,23 +104,23 @@ export default function BookingsPage() {
   return (
     <div className="space-y-8 relative">
       
-      {/* هدر آماری (Stats Bar) */}
+      {/* هدر آماری (آپدیت شده با تعداد واقعی) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-[#111] border border-white/5 p-4 rounded-2xl flex flex-col">
-           <span className="text-xs text-gray-500 mb-1">کل نوبت‌های امروز</span>
-           <span className="text-2xl font-bold text-white">12</span>
+           <span className="text-xs text-gray-500 mb-1">کل نوبت‌ها</span>
+           <span className="text-2xl font-bold text-white">{bookings.length}</span>
         </div>
         <div className="bg-[#111] border border-white/5 p-4 rounded-2xl flex flex-col">
            <span className="text-xs text-gray-500 mb-1">در انتظار تایید</span>
-           <span className="text-2xl font-bold text-yellow-500">4</span>
+           <span className="text-2xl font-bold text-yellow-500">{bookings.filter(b => b.status === 'pending').length}</span>
         </div>
         <div className="bg-[#111] border border-white/5 p-4 rounded-2xl flex flex-col">
            <span className="text-xs text-gray-500 mb-1">کنسلی‌ها</span>
-           <span className="text-2xl font-bold text-red-500">1</span>
+           <span className="text-2xl font-bold text-red-500">{bookings.filter(b => b.status === 'cancelled').length}</span>
         </div>
         <div className="bg-[#111] border border-white/5 p-4 rounded-2xl flex flex-col">
-           <span className="text-xs text-gray-500 mb-1">استایلیست فعال</span>
-           <span className="text-2xl font-bold text-brand-gold">3</span>
+           <span className="text-xs text-gray-500 mb-1">تکمیل شده</span>
+           <span className="text-2xl font-bold text-green-500">{bookings.filter(b => b.status === 'completed').length}</span>
         </div>
       </div>
 
@@ -169,7 +189,7 @@ export default function BookingsPage() {
                 {getStatusText(item.status)}
               </span>
               
-              {/* ✅ دکمه جدید: صدور کارت دعوت */}
+              {/* دکمه صدور کارت دعوت */}
               <button 
                 onClick={() => openTicketModal(item)}
                 className="p-2 hover:bg-brand-gold hover:text-black rounded-lg text-brand-gold border border-brand-gold/20 transition-colors"
@@ -186,7 +206,7 @@ export default function BookingsPage() {
         ))}
       </div>
 
-      {/* --- MODAL 1: نوبت جدید (همان قبلی) --- */}
+      {/* --- MODAL 1: نوبت جدید --- */}
       <AnimatePresence>
         {isModalOpen && (
           <>
@@ -234,7 +254,7 @@ export default function BookingsPage() {
         )}
       </AnimatePresence>
 
-      {/* --- MODAL 2: ✅ کارت دعوت دیجیتال (جدید) --- */}
+      {/* --- MODAL 2: کارت دعوت دیجیتال --- */}
       <AnimatePresence>
         {ticketData && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -252,7 +272,6 @@ export default function BookingsPage() {
                    <button onClick={() => setTicketData(null)} className="p-2 bg-white/10 rounded-full hover:bg-red-500 hover:text-white transition-colors"><X size={20}/></button>
                 </div>
 
-                {/* کامپوننت کارت (برای رندر و دانلود) */}
                 <div className="overflow-x-auto w-full flex justify-center py-4">
                    <div className="scale-75 md:scale-100 origin-center">
                       <DigitalTicket ref={ticketRef} data={ticketData} />

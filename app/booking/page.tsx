@@ -7,18 +7,8 @@ import Footer from "@/components/Footer";
 import CustomCursor from "@/components/CustomCursor";
 import Image from "next/image";
 import { 
-  Calendar, 
-  CheckCircle, 
-  User, 
-  Download, 
-  Share2, 
-  Sparkles, 
-  CalendarCheck, 
-  Clock, 
-  Scissors, 
-  Hash, 
-  MapPin,
-  Smartphone
+  Calendar, CheckCircle, User, Download, Share2, Sparkles, 
+  CalendarCheck, Clock, Hash, Smartphone 
 } from "lucide-react";
 import { STYLISTS, TIME_SLOTS, DATES } from "@/app/constants/booking";
 import { SERVICES } from "@/app/constants";
@@ -32,21 +22,40 @@ export default function BookingPage() {
   const [selectedDate, setSelectedDate] = useState(DATES[0]);
   const [selectedTime, setSelectedTime] = useState("");
   
-  // استیت‌های کارت دعوت
+  // استیت‌های کارت دعوت و دانلود
   const [bookingId, setBookingId] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
   const ticketRef = useRef<HTMLDivElement>(null);
 
-  // نهایی‌سازی رزرو و نمایش بلیط
+  // نهایی‌سازی رزرو و ذخیره در سیستم
   const handleFinalBook = () => {
-    // تولید شناسه رزرو
+    // 1. تولید شناسه رزرو تصادفی
     const newBookingId = Math.floor(1000 + Math.random() * 9000).toString();
     setBookingId(newBookingId);
+
+    // 2. ساخت آبجکت رزرو
+    const newBooking = {
+      id: Date.now(), // یک شناسه یکتا برای سیستم
+      bookingId: newBookingId, // شناسه نمایشی برای کاربر
+      customer: "مشتری آنلاین", // در آینده می‌تونی اینپوت نام و تلفن بذاری
+      service: selectedService.title,
+      stylist: selectedStylist.name,
+      date: `${selectedDate.day} ${selectedDate.date}`,
+      time: selectedTime,
+      status: "pending", // وضعیت اولیه: در انتظار تایید
+      phone: "0912..." // شماره پیش‌فرض (یا از ورودی بگیر)
+    };
+
+    // 3. ذخیره در LocalStorage (برای اینکه ادمین ببینه)
+    const existingBookings = JSON.parse(localStorage.getItem("ayneh-bookings") || "[]");
+    localStorage.setItem("ayneh-bookings", JSON.stringify([newBooking, ...existingBookings]));
+
+    // 4. رفتن به مرحله نمایش بلیط
     setStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ارسال به واتس‌اپ (نسخه متنی رسمی و بدون ایموجی زرد)
+  // ارسال به واتس‌اپ
   const handleWhatsAppShare = () => {
     const message = `
 درود، نوبت رزرو شده در آینه بیوتی:
@@ -63,28 +72,25 @@ export default function BookingPage() {
     window.open(`https://wa.me/989170000000?text=${encodeURIComponent(message)}`, "_blank");
   };
 
-  // دانلود کارت دعوت
-const downloadTicket = async () => {
+  // دانلود کارت دعوت (با کیفیت بالا و فیکس رنگ)
+  const downloadTicket = async () => {
     if (!ticketRef.current) return;
     setIsDownloading(true);
     
     try {
       const canvas = await html2canvas(ticketRef.current, {
-        scale: 3, // کیفیت خیلی بالا (3x)
-        backgroundColor: '#050505', // ✅ حل مشکل رنگ پس‌زمینه
+        scale: 3, 
+        backgroundColor: '#050505', // پس‌زمینه مشکی برای فایل JPG
         useCORS: true,
         logging: false,
-        allowTaint: true,
-        // ✅ این گزینه باعث میشه فونت‌ها دقیق‌تر رندر بشن
-        onclone: (document) => {
-          const element = document.getElementById('digital-ticket-id');
-          if (element) {
-            element.style.color = '#ffffff'; // تضمین مجدد سفیدی متن
-          }
+        onclone: (doc) => {
+            // تضمین سفید بودن متن در عکس خروجی
+            const el = doc.getElementById('digital-ticket-id');
+            if(el) el.style.color = '#ffffff';
         }
       });
 
-      const data = canvas.toDataURL('image/jpeg', 1.0); // کیفیت ۱۰۰٪
+      const data = canvas.toDataURL('image/jpeg', 1.0);
       const link = document.createElement('a');
       link.href = data;
       link.download = `Ayneh-Ticket-${bookingId}.jpg`;
@@ -93,12 +99,13 @@ const downloadTicket = async () => {
       document.body.removeChild(link);
     } catch (error) {
       console.error("Download Error", error);
+      alert("مشکلی در دانلود پیش آمد.");
     } finally {
       setIsDownloading(false);
     }
   };
 
-  // داده‌های کارت دعوت
+  // داده‌های کارت دعوت برای نمایش
   const ticketData = {
     name: "مشتری گرامی",
     service: selectedService.title,
@@ -255,7 +262,6 @@ const downloadTicket = async () => {
                        </h3>
                        
                        <div className="space-y-6 mb-8">
-                          {/* آیتم سرویس */}
                           <div className="flex items-center gap-4">
                              <div className="w-12 h-12 rounded-2xl bg-white/5 relative overflow-hidden border border-white/10">
                                 <Image src={selectedService.image} alt="Service" fill className="object-cover" />
@@ -266,7 +272,6 @@ const downloadTicket = async () => {
                              </div>
                           </div>
 
-                          {/* آیتم استایلیست */}
                           <div className="flex items-center gap-4">
                              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-gray-400 border border-white/10">
                                 <User size={20} />
@@ -277,7 +282,6 @@ const downloadTicket = async () => {
                              </div>
                           </div>
 
-                          {/* آیتم زمان */}
                           <div className="flex items-center gap-4">
                              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-gray-400 border border-white/10">
                                 <Calendar size={20} />
@@ -327,7 +331,6 @@ const downloadTicket = async () => {
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center text-center space-y-8 py-10"
             >
-              {/* آیکون موفقیت انیمیشنی */}
               <div className="relative">
                  <div className="w-24 h-24 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center text-green-500 relative z-10">
                     <CalendarCheck size={48} />

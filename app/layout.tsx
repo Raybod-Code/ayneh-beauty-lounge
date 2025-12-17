@@ -1,4 +1,3 @@
-// app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Playfair_Display } from "next/font/google";
@@ -6,9 +5,9 @@ import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import CartDrawer from "@/components/CartDrawer";
 import CustomCursor from "@/components/CustomCursor";
-import Navbar from "@/components/Navbar"; // ✅ نوبار سراسری
-import Footer from "@/components/Footer"; // ✅ فوتر سراسری
-import { CartProvider } from "@/app/context/CartContext"; // ✅ مدیریت سبد خرید
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { CartProvider } from "@/app/context/CartContext"; // 👈 این خط خیلی مهمه
 
 const doran = localFont({
   src: "./fonts/Doran-Variable.woff2",
@@ -33,15 +32,6 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "AYNEH | آینه",
   description: "زیبایی، بازتاب توست - سالن زیبایی و اسپا لوکس",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "AYNEH",
-  },
-  formatDetection: {
-    telephone: false,
-  },
 };
 
 export default function RootLayout({
@@ -53,27 +43,27 @@ export default function RootLayout({
     <html lang="fa" dir="rtl" className={`${doran.variable} ${playfair.variable}`}>
       <body className="bg-[#050505] text-white antialiased selection:bg-[#C6A87C] selection:text-black overflow-x-hidden">
         
-        {/* کانتکست سبد خرید دور کل برنامه */}
+        {/* 👇 اینجا مغز فروشگاه رو فعال می‌کنیم 👇 */}
         <CartProvider>
+          
           <SmoothScroll />
           <CustomCursor />
           
-          {/* نوبار همیشه و همه جا هست */}
           <div className="relative z-50">
             <Navbar />
           </div>
 
-          <CartDrawer />
+          {/* 👇 سبد خرید باید اینجا باشه تا روی همه‌چی باز بشه */}
+          <CartDrawer /> 
           
-          {/* لایه نویز برای افکت سینمایی */}
           <div className="noise-overlay pointer-events-none fixed inset-0 z-40 opacity-5"></div>
           
-          {/* محتوای صفحات (مثل page.tsx) اینجا رندر میشه */}
           {children}
 
-          {/* فوتر همیشه پایین سایت هست */}
           <Footer />
+
         </CartProvider>
+        {/* 👆 پایان بخش فروشگاه 👆 */}
         
       </body>
     </html>

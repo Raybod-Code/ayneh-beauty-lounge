@@ -2,116 +2,123 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // 👈 برای هدایت به صفحه رزرو
+import { usePathname } from "next/navigation";
+import { ShoppingBag, Menu, X, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NAV_LINKS } from "@/app/constants";
-import { User } from "lucide-react"; // 👈 آیکون پروفایل
+import { useCart } from "@/app/context/CartContext"; // 👈
 
 export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const router = useRouter(); // 👈 هوک مسیریابی
+  const pathname = usePathname();
+  
+  const { cartItems, setIsOpen: setIsCartOpen } = useCart(); // 👈 گرفتن آیتم‌ها و تابع باز کردن دراور
+  const cartCount = cartItems.reduce((acc: number, item: any) => acc + item.quantity, 0); // محاسبه تعداد
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  return (
-    <div className="fixed top-6 left-0 right-0 z-[100] flex justify-center pointer-events-none">
-      <motion.nav
-        layout
-        initial={{ width: "90%", borderRadius: "24px", y: 0 }}
-        animate={{
-          width: scrolled ? "auto" : "90%", // در حالت اسکرول جمع‌وجور میشه
-          borderRadius: "50px",
-          y: scrolled ? 0 : 10,
-          backgroundColor: scrolled ? "rgba(15, 15, 15, 0.8)" : "transparent",
-          backdropFilter: scrolled ? "blur(20px)" : "blur(0px)",
-          border: scrolled ? "1px solid rgba(255,255,255,0.1)" : "1px solid transparent",
-          padding: scrolled ? "8px 12px" : "20px 40px",
-        }}
-        transition={{ type: "spring", stiffness: 120, damping: 20 }}
-        className="pointer-events-auto flex items-center justify-between max-w-5xl mx-auto"
-      >
-        
-        {/* لوگو - فقط وقتی اسکرول نشده نشون داده میشه تا جا باز شه */}
-        <AnimatePresence>
-          {!scrolled && (
-            <motion.div
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              exit={{ opacity: 0, width: 0 }}
-              className="hidden md:block mr-12 shrink-0 overflow-hidden"
-            >
-              <Link href="/" className="text-2xl font-black font-serif text-white tracking-tighter">
-                AYNEH
-              </Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
+  const navLinks = [
+    { name: "خانه", href: "/" },
+    { name: "خدمات", href: "/#services" },
+    { name: "فروشگاه", href: "/shop" }, // 👈 لینک فروشگاه اضافه شد
+    { name: "رزرو نوبت", href: "/booking" },
+    { name: "گالری", href: "/#gallery" },
+    { name: "تماس", href: "/#contact" },
+  ];
 
-        {/* لینک‌ها - با افکت Sliding Tab */}
-        <ul className="flex items-center gap-1 md:gap-2 overflow-x-auto no-scrollbar mask-gradient-x w-full md:w-auto">
-          {NAV_LINKS.map((link) => (
-            <li key={link.name} className="relative shrink-0">
+  return (
+    <>
+      <motion.nav
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled ? "bg-[#050505]/80 backdrop-blur-md py-4 shadow-lg border-b border-white/5" : "py-6 bg-transparent"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          
+          {/* لوگو */}
+          <Link href="/" className="flex items-center gap-2 group">
+             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center group-hover:bg-[#C6A87C] transition-colors">
+                <span className="font-serif font-black text-black text-xl">A</span>
+             </div>
+             <span className="font-serif font-bold text-xl tracking-widest hidden md:block">AYNEH</span>
+          </Link>
+
+          {/* منوی دسکتاپ */}
+          <div className="hidden md:flex items-center gap-8 bg-white/5 px-8 py-3 rounded-full border border-white/10 backdrop-blur-sm">
+            {navLinks.map((link) => (
               <Link
+                key={link.name}
                 href={link.href}
-                className="relative z-10 block px-4 py-2 text-xs md:text-sm font-medium text-white/70 hover:text-white transition-colors"
-                onMouseEnter={() => setHoveredLink(link.name)}
-                onMouseLeave={() => setHoveredLink(null)}
+                className={`text-sm font-medium transition-colors hover:text-[#C6A87C] ${
+                  pathname === link.href ? "text-[#C6A87C]" : "text-gray-300"
+                }`}
               >
                 {link.name}
               </Link>
-              
-              {/* اون هاله متحرک پشت لینک */}
-              {hoveredLink === link.name && (
-                <motion.div
-                  layoutId="navbar-hover"
-                  className="absolute inset-0 bg-white/10 rounded-full z-0"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                />
-              )}
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
 
-        {/* دکمه‌های سمت چپ (رزرو + پروفایل) */}
-        <div className={`shrink-0 flex items-center gap-3 ${scrolled ? "ml-2" : "ml-12"}`}>
-          
-          {/* دکمه پروفایل/ورود */}
-          <Link 
-            href="/login" 
-            className={`
-              flex items-center justify-center rounded-full border transition-all duration-300 group
-              ${scrolled 
-                ? "w-9 h-9 border-white/20 bg-white/5 hover:bg-white hover:text-black text-white" 
-                : "w-11 h-11 border-white/30 text-white hover:bg-white hover:text-black"
-              }
-            `}
-          >
-            <User size={scrolled ? 16 : 18} />
-          </Link>
+          {/* آیکون‌ها */}
+          <div className="flex items-center gap-4">
+             {/* دکمه سبد خرید */}
+             <button 
+               onClick={() => setIsCartOpen(true)} // باز کردن دراور
+               className="relative p-2 hover:bg-white/10 rounded-full transition-colors group"
+             >
+                <ShoppingBag size={22} className="group-hover:text-[#C6A87C] transition-colors" />
+                
+                {/* 🔴 بج تعداد محصول */}
+                {cartCount > 0 && (
+                   <span className="absolute top-0 right-0 w-5 h-5 bg-[#C6A87C] text-black text-[10px] font-bold rounded-full flex items-center justify-center animate-in zoom-in">
+                      {cartCount}
+                   </span>
+                )}
+             </button>
 
-          {/* دکمه رزرو */}
-          <button 
-            onClick={() => router.push("/booking")} // 👈 تغییر مسیر به صفحه رزرو داخلی
-            className={`
-              relative overflow-hidden rounded-full font-bold text-xs tracking-wider uppercase transition-all duration-300
-              ${scrolled 
-                ? "bg-brand-gold text-black px-5 py-2.5 hover:bg-white" 
-                : "border border-white/30 text-white px-6 py-3 hover:bg-white hover:text-black"
-              }
-            `}
-          >
-            رزرو آنلاین
-          </button>
+             <Link href="/login" className="hidden md:flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold hover:bg-[#C6A87C] transition-colors">
+                <User size={18} /> ورود
+             </Link>
+
+             {/* دکمه منوی موبایل */}
+             <button onClick={() => setIsOpen(true)} className="md:hidden p-2 text-white">
+                <Menu size={28} />
+             </button>
+          </div>
         </div>
-
       </motion.nav>
-    </div>
+
+      {/* منوی موبایل (Full Screen) */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            className="fixed inset-0 z-[60] bg-[#050505] flex flex-col items-center justify-center gap-8"
+          >
+             <button onClick={() => setIsOpen(false)} className="absolute top-8 right-8 p-2 bg-white/10 rounded-full">
+                <X size={32} />
+             </button>
+
+             {navLinks.map((link) => (
+               <Link
+                 key={link.name}
+                 href={link.href}
+                 onClick={() => setIsOpen(false)}
+                 className="text-3xl font-serif font-bold text-white hover:text-[#C6A87C] transition-colors"
+               >
+                 {link.name}
+               </Link>
+             ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
