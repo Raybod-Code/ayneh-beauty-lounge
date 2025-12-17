@@ -1,44 +1,28 @@
 // app/utils/faceLogic.ts
+import { AI_STYLE_ENGINE } from "./faceDatabase";
 
-// نقاط کلیدی صورت در MediaPipe
-const LANDMARKS = {
-  TOP: 10,
-  BOTTOM: 152,
-  LEFT_CHEEK: 234,
-  RIGHT_CHEEK: 454,
-  LEFT_JAW: 58,
-  RIGHT_JAW: 288,
-  LEFT_FOREHEAD: 21,
-  RIGHT_FOREHEAD: 251,
-};
+const getDistance = (p1: any, p2: any) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
 
-// تابع محاسبه فاصله بین دو نقطه
-const getDistance = (p1: any, p2: any) => {
-  return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-};
+export const analyzeFaceGeometry = (landmarks: any[]) => {
+  if (!landmarks || landmarks.length < 468) return null;
 
-export const detectFaceShape = (landmarks: any[]) => {
-  const width = getDistance(landmarks[LANDMARKS.LEFT_CHEEK], landmarks[LANDMARKS.RIGHT_CHEEK]);
-  const length = getDistance(landmarks[LANDMARKS.TOP], landmarks[LANDMARKS.BOTTOM]);
-  const jawWidth = getDistance(landmarks[LANDMARKS.LEFT_JAW], landmarks[LANDMARKS.RIGHT_JAW]);
-  const foreheadWidth = getDistance(landmarks[LANDMARKS.LEFT_FOREHEAD], landmarks[LANDMARKS.RIGHT_FOREHEAD]);
+  // فواصل کلیدی (نقاط استاندارد مدیاپایپ)
+  const foreheadWidth = getDistance(landmarks[103], landmarks[332]);
+  const cheekboneWidth = getDistance(landmarks[234], landmarks[454]);
+  const jawlineWidth = getDistance(landmarks[58], landmarks[288]);
+  const faceLength = getDistance(landmarks[10], landmarks[152]);
 
-  const ratio = length / width;
+  const ratioLenWid = faceLength / cheekboneWidth;
 
-  // الگوریتم ساده شده تشخیص فرم صورت
-  if (ratio > 1.5) {
-    return { shape: "کشیده (Oblong)", desc: "صورت شما کشیده و اشرافی است.", styles: ["چتری", "باب بلند", "فر درشت"] };
-  } else if (ratio < 1.15) {
-    if (jawWidth > foreheadWidth * 0.9) {
-      return { shape: "مربعی (Square)", desc: "خط فک قوی و جذاب دارید.", styles: ["لیر بلند", "پیکسی", "فرق کج"] };
-    } else {
-      return { shape: "گرد (Round)", desc: "صورتی با انحنای نرم و جوان.", styles: ["باب نامتقارن", "لیر خرد", "پف دار"] };
-    }
-  } else {
-    if (jawWidth < foreheadWidth * 0.7) {
-      return { shape: "قلبی (Heart)", desc: "پیشانی عریض و چانه ظریف.", styles: ["باب کلاسیک", "دم اسبی", "چتری کنار"] };
-    } else {
-      return { shape: "بیضی (Oval)", desc: "متعادل‌ترین فرم صورت (خوش‌شانس!).", styles: ["همه مدل‌ها!", "اسلیک بک", "باب کوتاه"] };
-    }
+  if (ratioLenWid > 1.5) return AI_STYLE_ENGINE.Long;
+  
+  if (cheekboneWidth > foreheadWidth && cheekboneWidth > jawlineWidth) {
+    return (jawlineWidth < foreheadWidth * 0.8) ? AI_STYLE_ENGINE.Heart : AI_STYLE_ENGINE.Diamond;
   }
+  
+  if (Math.abs(faceLength - cheekboneWidth) < 0.1 * faceLength) {
+    return (jawlineWidth > foreheadWidth * 0.9) ? AI_STYLE_ENGINE.Square : AI_STYLE_ENGINE.Round;
+  }
+
+  return AI_STYLE_ENGINE.Oval;
 };
