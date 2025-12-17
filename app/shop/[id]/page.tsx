@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import Image from "next/image";
 import {
   Star,
@@ -116,7 +115,6 @@ export default function ProductDetail() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-start">
-          
           {/* --- ستون چپ: گالری تصویر (اصلاح شده برای موبایل) --- */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -303,7 +301,6 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-      <Footer />
     </main>
   );
 }
