@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Calendar, Clock, User, CheckCircle, XCircle, MoreVertical, Search, Plus, X, Filter } from "lucide-react";
+import { useState, useRef } from "react";
+import { Calendar, Clock, User, CheckCircle, XCircle, MoreVertical, Search, Plus, X, Filter, Ticket, Download, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import html2canvas from "html2canvas";
+import { DigitalTicket } from "@/components/DigitalTicket";
 
-// داده‌های نمایشی
+// داده‌های نمایشی (همان قبلی‌ها)
 const INITIAL_BOOKINGS = [
   { id: 1, customer: "سارا محمدی", service: "رنگ و لایت", stylist: "الناز", date: "1402/10/25", time: "14:00", status: "pending", phone: "0912..." },
   { id: 2, customer: "مینا راد", service: "هیرکات", stylist: "سارا", date: "1402/10/25", time: "15:30", status: "confirmed", phone: "0935..." },
@@ -15,7 +17,11 @@ const INITIAL_BOOKINGS = [
 export default function BookingsPage() {
   const [bookings, setBookings] = useState(INITIAL_BOOKINGS);
   const [filter, setFilter] = useState("all");
-  const [isModalOpen, setIsModalOpen] = useState(false); // استیت مودال
+  const [isModalOpen, setIsModalOpen] = useState(false); // استیت مودال نوبت جدید
+  
+  // --- استیت‌های جدید برای کارت دعوت ---
+  const [ticketData, setTicketData] = useState<any>(null); // نوبت انتخاب شده برای چاپ
+  const ticketRef = useRef<HTMLDivElement>(null); // رفرنس برای عکس‌برداری
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -35,6 +41,42 @@ export default function BookingsPage() {
       case "cancelled": return "لغو شده";
       default: return status;
     }
+  };
+
+  // 📸 تابع دانلود کارت دعوت
+  const handleDownloadTicket = async () => {
+    if (!ticketRef.current || !ticketData) return;
+    
+    try {
+      const canvas = await html2canvas(ticketRef.current, {
+        scale: 2,
+        backgroundColor: null,
+        useCORS: true
+      });
+
+      const data = canvas.toDataURL('image/jpeg', 0.95);
+      const link = document.createElement('a');
+      link.href = data;
+      link.download = `Ayneh-Ticket-${ticketData.bookingId}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("خطا در دانلود بلیط:", error);
+      alert("دانلود انجام نشد.");
+    }
+  };
+
+  // باز کردن مودال کارت دعوت
+  const openTicketModal = (booking: any) => {
+    setTicketData({
+      name: booking.customer,
+      service: booking.service,
+      date: booking.date,
+      time: booking.time,
+      stylist: booking.stylist,
+      bookingId: booking.id.toString()
+    });
   };
 
   const filteredBookings = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
@@ -126,6 +168,16 @@ export default function BookingsPage() {
               <span className={`px-3 py-1 rounded-lg text-xs border ${getStatusColor(item.status)}`}>
                 {getStatusText(item.status)}
               </span>
+              
+              {/* ✅ دکمه جدید: صدور کارت دعوت */}
+              <button 
+                onClick={() => openTicketModal(item)}
+                className="p-2 hover:bg-brand-gold hover:text-black rounded-lg text-brand-gold border border-brand-gold/20 transition-colors"
+                title="صدور کارت دعوت"
+              >
+                <Ticket size={18} />
+              </button>
+
               <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">
                 <MoreVertical size={18} />
               </button>
@@ -134,7 +186,7 @@ export default function BookingsPage() {
         ))}
       </div>
 
-      {/* --- MODAL: نوبت جدید --- */}
+      {/* --- MODAL 1: نوبت جدید (همان قبلی) --- */}
       <AnimatePresence>
         {isModalOpen && (
           <>
@@ -155,7 +207,6 @@ export default function BookingsPage() {
               <div className="space-y-4">
                 <input type="text" placeholder="نام مشتری" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-brand-gold" />
                 <input type="tel" placeholder="شماره تماس" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-brand-gold" />
-                
                 <div className="grid grid-cols-2 gap-4">
                    <select className="bg-black/50 border border-white/10 rounded-xl p-4 text-gray-300 outline-none">
                      <option>انتخاب سرویس...</option>
@@ -168,7 +219,6 @@ export default function BookingsPage() {
                      <option>مینا</option>
                    </select>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                    <input type="date" className="bg-black/50 border border-white/10 rounded-xl p-4 text-gray-300 outline-none" />
                    <input type="time" className="bg-black/50 border border-white/10 rounded-xl p-4 text-gray-300 outline-none" />
@@ -181,6 +231,47 @@ export default function BookingsPage() {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* --- MODAL 2: ✅ کارت دعوت دیجیتال (جدید) --- */}
+      <AnimatePresence>
+        {ticketData && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+             <motion.div 
+               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+               onClick={() => setTicketData(null)}
+               className="absolute inset-0 bg-black/90 backdrop-blur-md"
+             />
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+               className="relative z-10 flex flex-col items-center gap-6 max-w-4xl w-full"
+             >
+                <div className="flex justify-between items-center w-full max-w-2xl px-4">
+                   <h3 className="text-2xl font-bold text-white">صدور کارت دعوت</h3>
+                   <button onClick={() => setTicketData(null)} className="p-2 bg-white/10 rounded-full hover:bg-red-500 hover:text-white transition-colors"><X size={20}/></button>
+                </div>
+
+                {/* کامپوننت کارت (برای رندر و دانلود) */}
+                <div className="overflow-x-auto w-full flex justify-center py-4">
+                   <div className="scale-75 md:scale-100 origin-center">
+                      <DigitalTicket ref={ticketRef} data={ticketData} />
+                   </div>
+                </div>
+
+                <div className="flex gap-4">
+                   <button 
+                     onClick={handleDownloadTicket}
+                     className="bg-brand-gold text-black px-8 py-3 rounded-xl font-bold hover:bg-white transition-all flex items-center gap-2 shadow-lg"
+                   >
+                     <Download size={20} /> دانلود فایل JPG
+                   </button>
+                   <button className="bg-white/10 text-white px-8 py-3 rounded-xl font-bold hover:bg-white/20 transition-all flex items-center gap-2 border border-white/10">
+                     <Share2 size={20} /> اشتراک‌گذاری
+                   </button>
+                </div>
+             </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
