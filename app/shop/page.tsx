@@ -13,12 +13,12 @@ import {
 import { useCart } from "@/app/context/CartContext";
 import { PRODUCTS } from "@/app/utils/faceDatabase";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Metadata } from "next";
+// import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "فروشگاه اختصاصی",
-  description: "خرید محصولات مراقبتی و آرایشی لوکس با ضمانت اصالت کالا.",
-};
+// export const metadata: Metadata = {
+//   title: "فروشگاه اختصاصی",
+//   description: "خرید محصولات مراقبتی و آرایشی لوکس با ضمانت اصالت کالا.",
+// };
 // --- داده‌های نمونه توسعه یافته برای فروشگاه ---
 // (در واقعیت این‌ها از دیتابیس اصلی می‌آیند)
 const SHOP_DATA = [

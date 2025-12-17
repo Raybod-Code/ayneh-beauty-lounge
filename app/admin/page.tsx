@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import { Users, ShoppingBag, CalendarCheck, DollarSign, Bell } from "lucide-react";
 import AdminChart from "@/components/AdminChart"; // 👈 ایمپورت نمودار جدید
 import type { Metadata } from "next";
-export const metadata: Metadata = {
-  title: "پنل مدیریت",
-  robots: {
-    index: false, // این باعث میشه گوگل این صفحه رو نشون نده (محرمانه بمونه)
-    follow: false,
-  },
-};
+// export const metadata: Metadata = {
+//   title: "پنل مدیریت",
+//   robots: {
+//     index: false, // این باعث میشه گوگل این صفحه رو نشون نده (محرمانه بمونه)
+//     follow: false,
+//   },
+// };
 const STATS = [
   { title: "درآمد امروز", value: "۱۲.۵۰۰.۰۰۰", unit: "تومان", icon: DollarSign, color: "text-green-400", bg: "bg-green-400/10" },
   { title: "نوبت‌های امروز", value: "۸", unit: "نفر", icon: CalendarCheck, color: "text-blue-400", bg: "bg-blue-400/10" },
