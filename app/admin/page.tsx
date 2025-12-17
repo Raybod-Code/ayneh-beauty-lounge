@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Users, ShoppingBag, CalendarCheck, DollarSign, Bell } from "lucide-react";
 import AdminChart from "@/components/AdminChart"; // 👈 ایمپورت نمودار جدید
-import type { Metadata } from "next";
+// import type { Metadata } from "next";
 // export const metadata: Metadata = {
 //   title: "پنل مدیریت",
 //   robots: {
