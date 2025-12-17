@@ -14,6 +14,12 @@ import { STYLISTS, TIME_SLOTS, DATES } from "@/app/constants/booking";
 import { SERVICES } from "@/app/constants";
 import html2canvas from "html2canvas";
 import { DigitalTicket } from "@/components/DigitalTicket";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "رزرو نوبت آنلاین",
+  description: "دریافت نوبت خدمات زیبایی در کمتر از ۱ دقیقه.",
+};
 
 export default function BookingPage() {
   const [step, setStep] = useState<1 | 2>(1); // 1: انتخاب، 2: بلیط
