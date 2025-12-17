@@ -8,6 +8,7 @@ import CustomCursor from "@/components/CustomCursor";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/app/context/CartContext"; // 👈 این خط خیلی مهمه
+import AIWidget from "@/components/AIWidget"; // 👈 اینو اضافه کن
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ayneh-beauty.vercel.app"), // دامین سایتت (بعدا که دیپلوی کردی واقعی میشه)
@@ -99,18 +100,14 @@ export default function RootLayout({
         <CartProvider>
           <SmoothScroll />
           <CustomCursor />
-
+          <AIWidget /> {/* 👈 ✅ این خط باید حتماً اینجا باشه */}
           <div className="relative z-50">
             <Navbar />
           </div>
-
           {/* 👇 سبد خرید باید اینجا باشه تا روی همه‌چی باز بشه */}
           <CartDrawer />
-
           <div className="noise-overlay pointer-events-none fixed inset-0 z-40 opacity-5"></div>
-
           {children}
-
           <Footer />
         </CartProvider>
         {/* 👆 پایان بخش فروشگاه 👆 */}
