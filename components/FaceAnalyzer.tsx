@@ -198,7 +198,7 @@ export default function FaceAnalyzer() {
               {/* ماسک راهنما روی دوربین */}
               {webcamRunning && (
                 <div className="absolute inset-0 pointer-events-none border-[20px] border-black/30 rounded-[3rem]">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[280px] border-2 border-white/20 rounded-[50%] opacity-50"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[55%] max-w-[240px] max-h-[320px] border-2 border-white/20 rounded-[50%] opacity-50 shadow-[0_0_50px_rgba(0,0,0,0.5)_inset]"></div>
                   {landmarks.length > 0 && (
                     <div className="absolute top-4 right-4 bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 border border-green-500/30">
                       <Check size={12} /> چهره شناسایی شد
@@ -309,7 +309,10 @@ export default function FaceAnalyzer() {
                           style={{ backgroundColor: c }}
                           className="w-12 h-12 rounded-full border-2 border-white/10 shadow-lg transform group-hover:scale-110 transition-transform cursor-help"
                         />
-                        <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity uppercase">
+                        <span
+                          className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded 
+  opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity uppercase whitespace-nowrap z-20"
+                        >
                           {c}
                         </span>
                       </div>

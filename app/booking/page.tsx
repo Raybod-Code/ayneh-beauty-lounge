@@ -464,7 +464,7 @@ export default function BookingPage() {
 
               {/* نمایش کارت دعوت */}
               <div className="w-full py-6 flex justify-center overflow-hidden">
-                <div className="transform scale-[0.5] sm:scale-[0.7] md:scale-[0.85] lg:scale-100 transition-transform origin-center hover:scale-[1.02] duration-500">
+                <div className="transform scale-[0.4] min-[400px]:scale-[0.5] sm:scale-[0.7] md:scale-[0.85] lg:scale-100 transition-transform origin-center hover:scale-[1.02] duration-500">
                   <DigitalTicket ref={ticketRef} data={ticketData} />
                 </div>
               </div>
