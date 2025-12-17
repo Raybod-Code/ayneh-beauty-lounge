@@ -30,7 +30,6 @@ export default function ProductDetail() {
 
   // پیدا کردن محصول
   const product: any = PRODUCTS.find((p) => p.id === id) || {
-    // 👈 اضافه کردن : any
     id: "p1",
     name: "محصول یافت نشد",
     price: 0,
@@ -117,12 +116,14 @@ export default function ProductDetail() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-start">
-          {/* --- ستون چپ: گالری تصویر --- */}
+          
+          {/* --- ستون چپ: گالری تصویر (اصلاح شده برای موبایل) --- */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
-            className="sticky top-32 space-y-6"
+            // 👇 تغییر اینجاست: در موبایل (relative) و در دسکتاپ (sticky)
+            className="relative lg:sticky lg:top-32 space-y-6"
           >
             <div className="relative aspect-[4/5] bg-[#111] rounded-[3rem] overflow-hidden border border-white/5 group">
               <Image
@@ -140,7 +141,7 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* تامبنیل‌ها (برای دمو تکراری) */}
+            {/* تامبنیل‌ها (مخفی در موبایل برای شلوغ نشدن، یا نمایش اختیاری) */}
             <div className="grid grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((i) => (
                 <div
@@ -179,7 +180,7 @@ export default function ProductDetail() {
                   {product.rating || 4.9} (۱۲۵ دیدگاه)
                 </span>
               </div>
-              <h1 className="text-5xl md:text-6xl font-black font-serif leading-tight">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black font-serif leading-tight">
                 {product.name}
               </h1>
               <div className="text-3xl font-mono text-white flex items-center gap-4">
@@ -206,7 +207,7 @@ export default function ProductDetail() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-[#111] p-6 rounded-[2rem] border border-white/5 space-y-6"
+              className="bg-[#111] p-6 rounded-[2rem] border border-white/5 space-y-6 sticky bottom-0 md:relative z-20 md:z-0 backdrop-blur-md md:backdrop-blur-0 bg-opacity-95 md:bg-opacity-100"
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold text-sm text-gray-400">

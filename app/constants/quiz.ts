@@ -3,98 +3,111 @@
 export type RecommendationType = {
   title: string;
   description: string;
-  priceRange: string;
   image: string;
-  tags: string[];
+  priceRange: string;
 };
 
-export const RECOMMENDATIONS: Record<string, RecommendationType> = {
-  // --- Hair Recommendations ---
-  "hair_revival": {
-    title: "پروتئین‌تراپی و احیا",
-    description: "موهای شما تشنه هستند! پیشنهاد ما درمان عمیق با پروتئین ابریشم و اوزون‌تراپی برای بازگرداندن درخشش است.",
-    priceRange: "۳.۰۰۰ - ۵.۰۰۰",
-    image: "/images/service-spa.png",
-    tags: ["hair", "damage"],
-  },
-  "hair_transformation": {
-    title: "کوتاهی و بالیاژ ژورنالی",
-    description: "وقت یک تغییر بزرگ است. یک کوتاهی باب یا لیر به همراه تکنیک بالیاژ برای بُعد دادن به موها.",
-    priceRange: "۴.۵۰۰ - ۸.۰۰۰",
-    image: "/images/service-color.png",
-    tags: ["hair", "style"],
-  },
-  "hair_maintenance": {
-    title: "رنگ ریشه و براشینگ",
-    description: "برای حفظ زیبایی فعلی، یک رنگ ریشه دقیق و براشینگ مجلسی کافیست.",
-    priceRange: "۱.۵۰۰ - ۲.۵۰۰",
-    image: "/images/service-haircut.png",
-    tags: ["hair", "daily"],
-  },
-
-  // --- Nail Recommendations (Local Images) ---
-  "nail_extension": {
-    title: "کاشت ژل روسی (Russian Gel)",
-    description: "برای داشتن ناخن‌هایی بلند، ظریف و بسیار مقاوم. مناسب برای کسانی که صدف ناخن کوتاه دارند.",
-    priceRange: "۸۰۰ - ۱.۲۰۰",
-    image: "/images/service-bridal.png", // موقت: حس ظرافت
-    tags: ["nail", "long"],
-  },
-  "nail_therapy": {
-    title: "لمینت و مانیکور خیس",
-    description: "استحکام‌سازی ناخن طبیعی بدون افزایش قد. ظاهری نچرال و بسیار شیک.",
-    priceRange: "۴۵۰ - ۷۰۰",
-    image: "/images/service-spa.png", // موقت: حس سلامت
-    tags: ["nail", "natural"],
-  },
-  "nail_art": {
-    title: "ژلیش با طراحی کروم/فرنچ",
-    description: "یک دیزاین ترندی و خاص. پیشنهاد ما: فرنچ رنگی یا پودر کروم روی ناخن طبیعی.",
-    priceRange: "۳۵۰ - ۶۰۰",
-    image: "/images/service-color.png", // موقت: حس رنگ و هنر
-    tags: ["nail", "art"],
-  },
-};
-
-// سوالات (بدون تغییر، فقط برای اطمینان دوباره می‌گذارم)
-export const QUIZ_DATA = {
+export const QUIZ_DATA: Record<string, any[]> = {
   hair: [
     {
-      id: 1,
-      question: "وضعیت فعلی موهای شما چطور است؟",
+      question: "جنس فعلی موهای شما چطور است؟",
       options: [
-        { text: "خشک، دکلره شده و شکننده", icon: "dry", score: { hair_revival: 5, hair_transformation: 1, hair_maintenance: 0 } },
-        { text: "سالم اما تکراری و بی‌حالت", icon: "boring", score: { hair_revival: 1, hair_transformation: 5, hair_maintenance: 2 } },
-        { text: "خوب است، فقط نیاز به مرتب‌سازی دارد", icon: "healthy", score: { hair_revival: 0, hair_transformation: 2, hair_maintenance: 5 } },
+        { text: "خشک و وز", icon: "dry", score: { hydration: 2, keratin: 1 } },
+        {
+          text: "چرب و بی‌حالت",
+          icon: "boring",
+          score: { volume: 2, botox: 1 },
+        },
+        {
+          text: "سالم و معمولی",
+          icon: "healthy",
+          score: { color: 1, light: 1 },
+        },
       ],
     },
     {
-      id: 2,
-      question: "چقدر اهل رسیدگی روزانه هستید؟",
+      question: "چقدر اهل سشوار و اتو مو هستید؟",
       options: [
-        { text: "اصلاً (می‌خوام صبح پاشم عالی باشه)", icon: "sleep", score: { hair_revival: 5, hair_transformation: 2, hair_maintenance: 0 } },
-        { text: "عاشق سشوار و حالت دادنم", icon: "style", score: { hair_revival: 1, hair_transformation: 5, hair_maintenance: 3 } },
+        { text: "هر روز!", icon: "style", score: { therapy: 2, hydration: 1 } },
+        { text: "فقط مهمانی‌ها", icon: "ok", score: { color: 1 } },
+        { text: "اصلاً (طبیعی)", icon: "sleep", score: { cut: 2 } },
       ],
     },
   ],
   nail: [
     {
-      id: 1,
-      question: "وضعیت ناخن‌های طبیعی شما؟",
+      question: "وضعیت ناخن‌هایتان چگونه است؟",
       options: [
-        { text: "بسیار شکننده و کوتاه", icon: "break", score: { nail_extension: 5, nail_therapy: 2, nail_art: 0 } },
-        { text: "خوب و متوسط", icon: "ok", score: { nail_extension: 1, nail_therapy: 5, nail_art: 3 } },
-        { text: "بلند و محکم", icon: "strong", score: { nail_extension: 0, nail_therapy: 2, nail_art: 5 } },
+        {
+          text: "شکننده و کوتاه",
+          icon: "break",
+          score: { laminet: 2, implant: 1 },
+        },
+        {
+          text: "محکم و بلند",
+          icon: "strong",
+          score: { gelish: 2, design: 1 },
+        },
+        { text: "معمولی", icon: "ok", score: { cover: 1 } },
       ],
     },
     {
-      id: 2,
       question: "چه سبکی را می‌پسندید؟",
       options: [
-        { text: "خیلی بلند و خاص (فانتزی)", icon: "long", score: { nail_extension: 5, nail_therapy: 0, nail_art: 4 } },
-        { text: "کوتاه، تمیز و نچرال (مینیمال)", icon: "minimal", score: { nail_extension: 0, nail_therapy: 5, nail_art: 2 } },
-        { text: "پر از طرح و رنگ (آرت)", icon: "art", score: { nail_extension: 2, nail_therapy: 1, nail_art: 5 } },
+        {
+          text: "ساده و مینیمال",
+          icon: "minimal",
+          score: { gelish: 1, laminet: 1 },
+        },
+        { text: "طراحی‌های خاص", icon: "art", score: { design: 2 } },
+        { text: "ناخن‌های خیلی بلند", icon: "long", score: { implant: 2 } },
       ],
     },
-  ]
+  ],
+};
+
+export const RECOMMENDATIONS: Record<string, RecommendationType> = {
+  hydration: {
+    title: "هیدروتراپی تخصصی",
+    description:
+      "موهای شما تشنه آبرسانی هستند! این پکیج با استفاده از دستگاه نانو استیم، رطوبت را به عمق ساقه مو برمی‌گرداند.",
+    image: "/images/services/hair-care.jpg", // عکس واقعی بذار
+    priceRange: "800 - 1.200",
+  },
+  keratin: {
+    title: "کراتین احیا و صافی",
+    description:
+      "برای خداحافظی با وز مو و داشتن موهایی ابریشمی، کراتین بهترین گزینه برای شماست.",
+    image: "/images/services/hair-color.jpg",
+    priceRange: "2.500 - 4.000",
+  },
+  color: {
+    title: "رنگ و لایت آمبره",
+    description:
+      "موهای شما سالم است و آماده یک تغییر جذاب! تکنیک آمبره می‌تواند چهره شما را دگرگون کند.",
+    image: "/images/services/hair-color.jpg",
+    priceRange: "3.000 - 6.000",
+  },
+  implant: {
+    title: "کاشت پودر با طراحی",
+    description:
+      "برای داشتن ناخن‌هایی بلند و مقاوم با فرم دلخواه، کاشت پودر بهترین انتخاب است.",
+    image: "/images/services/nail.jpg",
+    priceRange: "450 - 600",
+  },
+  gelish: {
+    title: "ژلیش ناخن طبیعی",
+    description:
+      "ناخن‌های شما فرم خوبی دارند. یک ژلیش تمیز و شیک زیبایی دستانتان را دوچندان می‌کند.",
+    image: "/images/services/nail.jpg",
+    priceRange: "250 - 350",
+  },
+  // مقدار پیش‌فرض برای جلوگیری از ارور
+  default: {
+    title: "مشاوره حضوری VIP",
+    description:
+      "برای تشخیص دقیق‌تر نیازهای شما، پیشنهاد می‌کنیم یک جلسه مشاوره رایگان رزرو کنید.",
+    image: "/images/hero-bg.jpg",
+    priceRange: "رایگان",
+  },
 };

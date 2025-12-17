@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  X, Sparkles, Scissors, PenTool, 
+  Sparkles, Scissors, PenTool, 
   Wind, CircleDashed, CheckCircle2, 
   Moon, Sun, 
   Minimize2, Maximize2, Brush, 
@@ -12,28 +12,18 @@ import {
 import Image from "next/image";
 import { QUIZ_DATA, RECOMMENDATIONS, RecommendationType } from "@/app/constants/quiz";
 
-// مپ کردن کلمات کلیدی به آیکون‌های لوکس
+// مپ کردن آیکون‌ها
 const ICON_MAP: Record<string, any> = {
-  // Hair Icons
-  dry: Wind,           // موی خشک -> باد
-  boring: CircleDashed,// معمولی -> دایره خط‌چین
-  healthy: CheckCircle2,// سالم -> تیک
-  sleep: Moon,         // رسیدگی کم -> ماه
-  style: Sun,          // رسیدگی زیاد -> خورشید
-  
-  // Nail Icons
-  break: Minimize2,    // شکننده -> کوچک
-  ok: Fingerprint,     // معمولی -> اثر انگشت
-  strong: ShieldCheck, // محکم -> سپر
-  long: Maximize2,     // بلند -> بزرگ
-  minimal: CircleDashed, // مینیمال
-  art: Brush,          // هنری -> قلم‌مو
+  dry: Wind, boring: CircleDashed, healthy: CheckCircle2,
+  sleep: Moon, style: Sun, break: Minimize2,
+  ok: Fingerprint, strong: ShieldCheck, long: Maximize2,
+  minimal: CircleDashed, art: Brush,
 };
 
 type Category = "hair" | "nail" | null;
 type Scores = { [key: string]: number };
 
-export default function SmartQuiz({ onClose }: { onClose: () => void }) {
+export function SmartQuiz() { // نیازی به onClose نیست چون در ویجت هندل میشه
   const [category, setCategory] = useState<Category>(null);
   const [step, setStep] = useState(0);
   const [scores, setScores] = useState<Scores>({});
@@ -63,61 +53,72 @@ export default function SmartQuiz({ onClose }: { onClose: () => void }) {
   };
 
   const calculateResult = (finalScores: Scores) => {
-    const winnerKey = Object.keys(finalScores).reduce((a, b) => finalScores[a] > finalScores[b] ? a : b);
-    setResult(RECOMMENDATIONS[winnerKey]);
+    // پیدا کردن بیشترین امتیاز (لاجیک ساده)
+    const keys = Object.keys(finalScores);
+    let winnerKey = "default";
+    
+    if (keys.length > 0) {
+       winnerKey = keys.reduce((a, b) => finalScores[a] > finalScores[b] ? a : b);
+    }
+
+    setResult(RECOMMENDATIONS[winnerKey] || RECOMMENDATIONS["default"]);
   };
 
   const currentQuestions = category ? QUIZ_DATA[category] : [];
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 overflow-hidden font-sans"
-    >
-      <button onClick={onClose} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors z-50">
-        <X size={32} />
-      </button>
-
+    // 👇 کانتینر اصلی اصلاح شده (دیگه فیکس نیست)
+    <div className="w-full h-full flex flex-col items-center p-2 text-white overflow-y-auto custom-scrollbar pb-20">
+      
       <div className="w-full max-w-2xl relative">
         
-        {/* --- مرحله ۰: انتخاب دسته --- */}
+        {/* --- مرحله انتخاب دسته --- */}
         {!category && (
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-center"
+            className="text-center space-y-8 mt-4"
           >
-            <h2 className="text-3xl md:text-5xl font-black text-white mb-12">
-              در کدام بخش نیاز به <span className="text-brand-gold">مشاوره</span> دارید؟
+            <h2 className="text-2xl md:text-3xl font-black mb-4">
+              در کدام بخش نیاز به <span className="text-[#C6A87C]">مشاوره</span> دارید؟
             </h2>
-            <div className="flex flex-col md:flex-row gap-6 justify-center">
+            <div className="flex flex-col gap-4">
               <button 
                 onClick={() => handleCategorySelect("hair")}
-                className="group flex flex-col items-center justify-center gap-4 p-8 rounded-[2rem] border border-white/10 hover:border-brand-gold hover:bg-white/[0.05] transition-all w-full md:w-64 h-64"
+                className="group flex items-center gap-6 p-6 rounded-2xl border border-white/10 hover:border-[#C6A87C] bg-white/5 hover:bg-white/10 transition-all w-full"
               >
-                <Scissors size={48} strokeWidth={1} className="text-gray-400 group-hover:text-brand-gold transition-colors" />
-                <span className="text-2xl font-bold">خدمات مو</span>
+                <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center text-[#C6A87C] group-hover:scale-110 transition-transform">
+                    <Scissors size={32} />
+                </div>
+                <div className="text-right">
+                    <span className="text-xl font-bold block text-white">خدمات مو</span>
+                    <span className="text-xs text-gray-400">رنگ، کراتین، کوتاهی</span>
+                </div>
               </button>
               
               <button 
                 onClick={() => handleCategorySelect("nail")}
-                className="group flex flex-col items-center justify-center gap-4 p-8 rounded-[2rem] border border-white/10 hover:border-brand-gold hover:bg-white/[0.05] transition-all w-full md:w-64 h-64"
+                className="group flex items-center gap-6 p-6 rounded-2xl border border-white/10 hover:border-[#C6A87C] bg-white/5 hover:bg-white/10 transition-all w-full"
               >
-                <PenTool size={48} strokeWidth={1} className="text-gray-400 group-hover:text-brand-gold transition-colors" />
-                <span className="text-2xl font-bold">خدمات ناخن</span>
+                <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center text-[#C6A87C] group-hover:scale-110 transition-transform">
+                    <PenTool size={32} />
+                </div>
+                <div className="text-right">
+                    <span className="text-xl font-bold block text-white">خدمات ناخن</span>
+                    <span className="text-xs text-gray-400">کاشت، ژلیش، طراحی</span>
+                </div>
               </button>
             </div>
           </motion.div>
         )}
 
-        {/* --- مرحله پرسش و پاسخ --- */}
-        {category && !result && (
-          <div className="flex flex-col items-center text-center">
-            <div className="w-full h-1 bg-white/10 rounded-full mb-12 overflow-hidden">
+        {/* --- مرحله سوالات --- */}
+        {category && !result && currentQuestions[step] && (
+          <div className="flex flex-col items-center text-center w-full">
+            {/* نوار پیشرفت */}
+            <div className="w-full h-1 bg-white/10 rounded-full mb-8 overflow-hidden">
               <motion.div 
-                className="h-full bg-brand-gold"
+                className="h-full bg-[#C6A87C]"
                 initial={{ width: 0 }}
                 animate={{ width: `${((step + 1) / currentQuestions.length) * 100}%` }}
                 transition={{ duration: 0.5 }}
@@ -130,32 +131,30 @@ export default function SmartQuiz({ onClose }: { onClose: () => void }) {
                 initial={{ x: 50, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -50, opacity: 0 }}
-                transition={{ duration: 0.4 }}
                 className="w-full"
               >
-                <span className="text-brand-gold text-sm tracking-[0.3em] uppercase mb-4 block">
-                  Step 0{step + 1}
+                <span className="text-[#C6A87C] text-xs tracking-[0.2em] uppercase mb-4 block">
+                  سوال {step + 1} از {currentQuestions.length}
                 </span>
-                <h2 className="text-2xl md:text-4xl font-bold text-white mb-10 leading-tight">
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-8 leading-relaxed">
                   {currentQuestions[step].question}
                 </h2>
 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                   {currentQuestions[step].options.map((option: any, idx: number) => {
-                    const IconComponent = ICON_MAP[option.icon] || Sparkles; // آیکون پیش‌فرض
+                    const IconComponent = ICON_MAP[option.icon] || Sparkles;
                     
                     return (
                       <button
                         key={idx}
                         onClick={() => handleOptionClick(option.score)}
-                        className="group flex items-center justify-between p-6 rounded-2xl border border-white/10 hover:border-brand-gold/50 hover:bg-white/[0.03] transition-all text-right"
+                        className="group flex items-center justify-between p-4 rounded-xl border border-white/10 hover:border-[#C6A87C] hover:bg-white/[0.05] transition-all text-right"
                       >
-                        <span className="text-lg md:text-xl text-gray-300 group-hover:text-white transition-colors font-medium">
+                        <span className="text-sm md:text-base text-gray-300 group-hover:text-white transition-colors font-medium">
                           {option.text}
                         </span>
-                        {/* رندر کردن آیکون */}
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-brand-gold/50 group-hover:text-brand-gold group-hover:scale-110 transition-all">
-                           <IconComponent size={24} strokeWidth={1.5} />
+                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[#C6A87C]/70 group-hover:text-[#C6A87C] group-hover:scale-110 transition-all">
+                           <IconComponent size={20} />
                         </div>
                       </button>
                     );
@@ -171,45 +170,40 @@ export default function SmartQuiz({ onClose }: { onClose: () => void }) {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#111] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl relative"
+            className="bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden shadow-2xl w-full"
           >
-            <div className="h-2 bg-gradient-to-r from-brand-gold via-white to-brand-gold" />
-            
-            <div className="p-8 md:p-10 text-center relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-gold/10 text-brand-gold text-xs font-bold tracking-widest uppercase mb-6">
-                <Sparkles size={14} />
-                پیشنهاد هوشمند ما
-              </div>
-
-              <h2 className="text-3xl md:text-5xl font-black text-white mb-6 leading-tight">
-                {result.title}
-              </h2>
-              
-              <div className="relative w-full h-56 md:h-72 rounded-2xl overflow-hidden mb-6 group bg-gray-900">
+            <div className="relative h-48 w-full">
                 <Image 
                   src={result.image} 
                   alt={result.title} 
                   fill 
-                  className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                  className="object-cover opacity-60" 
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex items-end justify-center p-6">
-                   <p className="text-gray-200 font-medium text-base md:text-lg leading-relaxed max-w-md">
-                     {result.description}
-                   </p>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] to-transparent"></div>
+                <div className="absolute bottom-4 right-4 left-4">
+                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#C6A87C] text-black text-[10px] font-bold tracking-widest uppercase mb-2">
+                        <Sparkles size={12} /> پیشنهاد هوشمند
+                    </div>
+                    <h2 className="text-2xl font-black text-white">{result.title}</h2>
                 </div>
-              </div>
+            </div>
+            
+            <div className="p-6 text-right space-y-6">
+              <p className="text-gray-300 text-sm leading-relaxed">
+                {result.description}
+              </p>
 
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-t border-white/10 pt-6">
-                <div className="text-center md:text-right">
-                  <span className="text-gray-500 text-xs uppercase tracking-widest block mb-1">حدود هزینه</span>
-                  <span className="text-xl font-bold text-white" dir="ltr">{result.priceRange} <span className="text-sm font-light text-gray-500">T</span></span>
+              <div className="flex items-center justify-between border-t border-white/10 pt-4">
+                <div>
+                  <span className="text-gray-500 text-[10px] uppercase tracking-widest block">هزینه حدودی</span>
+                  <span className="text-lg font-bold text-[#C6A87C] font-mono">{result.priceRange}</span>
                 </div>
                 
                 <button 
-                  onClick={() => window.open(`https://wa.me/989170000000?text=سلام، من از مشاوره هوشمند استفاده کردم و "${result.title}" بهم پیشنهاد شد. برای رزرو وقت راهنمایی می‌خواستم.`, "_blank")}
-                  className="bg-brand-gold text-black px-8 py-3 rounded-full font-bold text-sm hover:bg-white transition-colors w-full md:w-auto"
+                  onClick={() => window.open(`https://wa.me/989170000000?text=سلام، آزمون استایل رو انجام دادم و "${result.title}" بهم پیشنهاد شد.`, "_blank")}
+                  className="bg-[#C6A87C] text-black px-6 py-2 rounded-xl font-bold text-sm hover:bg-white transition-colors shadow-lg"
                 >
-                  رزرو همین پکیج
+                  مشاوره رایگان
                 </button>
               </div>
             </div>
@@ -217,6 +211,6 @@ export default function SmartQuiz({ onClose }: { onClose: () => void }) {
         )}
 
       </div>
-    </motion.div>
+    </div>
   );
 }
