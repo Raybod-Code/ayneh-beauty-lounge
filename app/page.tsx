@@ -12,7 +12,7 @@ import About from "@/components/About";
 import Footer from "@/components/Footer";
 import CustomCursor from "@/components/CustomCursor";
 import { Sparkles, ScanFace, X } from "lucide-react"; // اضافه شدن X برای دکمه بستن
-import SmartQuiz from "@/components/SmartQuiz";
+import {SmartQuiz} from "@/components/SmartQuiz";
 import FaceAnalyzer from "@/components/FaceAnalyzer";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 
