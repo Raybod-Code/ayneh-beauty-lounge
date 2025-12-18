@@ -12,26 +12,29 @@ import {
   Filter,
   ArrowRight,
   Star,
-  Plus,
   SlidersHorizontal,
   X,
   Eye,
   ChevronDown,
   Heart,
+  Sparkles, // 👈 اضافه شد
+  Palette // 👈 اضافه شد
 } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
+import { useColor } from "@/app/context/ColorContext"; // 👈 اضافه شد (کانتکست رنگ)
 import { PRODUCTS } from "@/app/utils/faceDatabase";
 import { motion, AnimatePresence } from "framer-motion";
-// import type { Metadata } from "next";
+import { SEASON_PALETTES } from "@/app/constants/colors"; // 👈 اضافه شد
 
-// export const metadata: Metadata = {
-//   title: "فروشگاه اختصاصی",
-//   description: "خرید محصولات مراقبتی و آرایشی لوکس با ضمانت اصالت کالا.",
-// };
-// --- داده‌های نمونه توسعه یافته برای فروشگاه ---
-// (در واقعیت این‌ها از دیتابیس اصلی می‌آیند)
+// --- داده‌های نمونه توسعه یافته برای فروشگاه (با تگ فصل‌ها) ---
 const SHOP_DATA = [
-  ...PRODUCTS.map((p) => ({ ...p, category: "makeup", label: "پرفروش" })), // فرض می‌کنیم محصولات هوش مصنوعی میکاپ هستند
+  // محصولات هوش مصنوعی (فرض می‌کنیم به همه فصل‌ها می‌خورند یا رندوم)
+  ...PRODUCTS.map((p) => ({ 
+    ...p, 
+    category: "makeup", 
+    label: "پرفروش",
+    seasons: ["Winter", "Summer", "Spring", "Autumn"] // مناسب همه
+  })), 
   {
     id: "p7",
     name: "شامپو کراتینه بدون سولفات",
@@ -40,33 +43,37 @@ const SHOP_DATA = [
     category: "hair",
     rating: 4.8,
     label: "جدید",
+    seasons: ["Winter", "Summer", "Spring", "Autumn"]
   },
   {
     id: "p8",
-    name: "سرم ویتامین C روشن‌کننده",
+    name: "سرم ویتامین C روشن‌کننده (پوست گرم)",
     price: 890000,
     image: "/images/p5.jpg",
     category: "skin",
     rating: 4.9,
     label: null,
+    seasons: ["Spring", "Autumn"] // مخصوص پوست‌های گرم
   },
   {
     id: "p9",
-    name: "ماسک موی آرگان مراکشی",
+    name: "ماسک موی آرگان طلایی (پاییزه)",
     price: 620000,
     image: "/images/p1.jpg",
     category: "hair",
     rating: 4.7,
     label: null,
+    seasons: ["Autumn"] // مخصوص پاییز
   },
   {
     id: "p10",
-    name: "کرم دور چشم ضد چروک",
+    name: "کرم دور چشم خاویار (زمستانه)",
     price: 1100000,
     image: "/images/p2.jpg",
     category: "skin",
     rating: 5.0,
     label: "VIP",
+    seasons: ["Winter"] // مخصوص زمستان
   },
   {
     id: "p11",
@@ -76,15 +83,17 @@ const SHOP_DATA = [
     category: "tools",
     rating: 4.9,
     label: null,
+    seasons: ["Winter", "Summer", "Spring", "Autumn"]
   },
   {
     id: "p12",
-    name: "اسپری محافظ حرارتی مو",
+    name: "اسپری محافظ حرارتی (سرد)",
     price: 380000,
     image: "/images/p6.jpg",
     category: "hair",
     rating: 4.6,
     label: null,
+    seasons: ["Summer", "Winter"] // مخصوص پوست‌های سرد
   },
 ];
 
@@ -105,16 +114,20 @@ const SORT_OPTIONS = [
 
 export default function ShopPage() {
   const { addToCart } = useCart();
+  const { season } = useColor(); // 👈 دریافت فصل کاربر از هوش مصنوعی
 
   // --- States ---
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
-  const [priceRange, setPriceRange] = useState([0, 2000000]); // رنج قیمت فرضی
+  const [priceRange, setPriceRange] = useState([0, 2000000]);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [quickViewProduct, setQuickViewProduct] = useState<any>(null); // محصولی که در مودال باز شده
+  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
+  
+  // استیت جدید برای فعال/غیرفعال کردن فیلتر فصل
+  const [isSeasonFilterActive, setIsSeasonFilterActive] = useState(false);
 
-  // --- Filtering & Sorting Logic (Memoized for performance) ---
+  // --- Filtering & Sorting Logic ---
   const filteredProducts = useMemo(() => {
     let result = [...SHOP_DATA];
 
@@ -130,12 +143,17 @@ export default function ShopPage() {
       );
     }
 
-    // 3. فیلتر قیمت (ساده)
+    // 3. فیلتر قیمت
     result = result.filter(
       (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
     );
 
-    // 4. مرتب‌سازی
+    // 4. فیلتر هوشمند فصل (جدید) ✨
+    if (isSeasonFilterActive && season) {
+      result = result.filter((p) => p.seasons?.includes(season));
+    }
+
+    // 5. مرتب‌سازی
     if (sortBy === "price_low") {
       result.sort((a, b) => a.price - b.price);
     } else if (sortBy === "price_high") {
@@ -145,14 +163,49 @@ export default function ShopPage() {
         (a, b) => ((b as any).rating || 0) - ((a as any).rating || 0)
       );
     }
-    // 'newest' فرض بر این است که ترتیب اولیه آرایه است
 
     return result;
-  }, [activeCategory, searchQuery, sortBy, priceRange]);
+  }, [activeCategory, searchQuery, sortBy, priceRange, isSeasonFilterActive, season]);
 
   // --- کامپوننت سایدبار فیلترها ---
   const FilterSidebar = () => (
     <div className="space-y-8 divide-y divide-white/10">
+      {/* بخش جدید: پیشنهاد هوشمند */}
+      {season && SEASON_PALETTES[season] && (
+        <div className="pb-6">
+           <div className="bg-gradient-to-br from-[#1a1a1a] to-black border border-brand-gold/30 rounded-2xl p-5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-40 transition-opacity">
+                 <Sparkles size={40} className="text-brand-gold" />
+              </div>
+              <h3 className="text-brand-gold font-bold text-sm mb-2 flex items-center gap-2">
+                 <Palette size={16} />
+                 پالت شخصی شما
+              </h3>
+              <p className="text-white font-black text-xl mb-1 flex items-center gap-2">
+                 {SEASON_PALETTES[season].icon} {SEASON_PALETTES[season].title.split(' ')[0]}
+              </p>
+              <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+                 محصولات هماهنگ با پوست شما
+              </p>
+              
+              <button 
+                onClick={() => setIsSeasonFilterActive(!isSeasonFilterActive)}
+                className={`w-full py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 ${
+                   isSeasonFilterActive 
+                   ? "bg-brand-gold text-black shadow-[0_0_15px_rgba(198,168,124,0.4)]" 
+                   : "bg-white/10 text-white hover:bg-white/20"
+                }`}
+              >
+                {isSeasonFilterActive ? (
+                   <><X size={14} /> لغو فیلتر هوشمند</>
+                ) : (
+                   <><Sparkles size={14} /> نمایش پیشنهادات</>
+                )}
+              </button>
+           </div>
+        </div>
+      )}
+
       {/* دسته‌بندی‌ها */}
       <div className="pt-4 first:pt-0">
         <h3 className="font-bold text-lg mb-4 flex items-center justify-between">
@@ -176,13 +229,12 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* فیلتر قیمت (شبیه‌سازی) */}
+      {/* فیلتر قیمت */}
       <div className="pt-6">
         <h3 className="font-bold text-lg mb-4 flex items-center justify-between">
           محدوده قیمت <ChevronDown size={16} className="opacity-50" />
         </h3>
         <div className="px-2">
-          {/* اینجا در آینده یک کامپوننت اسلایدر دوطرفه واقعی قرار می‌گیرد */}
           <div className="h-2 bg-white/10 rounded-full relative mb-4">
             <div className="absolute left-1/4 right-1/4 h-full bg-[#C6A87C] rounded-full"></div>
             <div className="absolute left-1/4 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#C6A87C] border-2 border-black rounded-full cursor-pointer"></div>
@@ -204,8 +256,7 @@ export default function ShopPage() {
 
       {/* --- هیرو سکشن فروشگاه --- */}
       <div className="relative pt-40 pb-20 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/images/shop-hero-bg.jpg')] bg-cover bg-center opacity-20 blur-3xl"></div>{" "}
-        {/* یک پس‌زمینه محو */}
+        <div className="absolute inset-0 bg-[url('/images/shop-hero-bg.jpg')] bg-cover bg-center opacity-20 blur-3xl"></div>
         <div className="max-w-7xl mx-auto text-center relative z-10 space-y-4">
           <span className="text-[#C6A87C] text-xs tracking-[0.4em] uppercase font-bold animate-pulse">
             Ayneh Luxury Boutique
@@ -225,24 +276,25 @@ export default function ShopPage() {
 
       <div className="max-w-[1400px] mx-auto px-4 md:px-6 pb-20">
         <div className="flex flex-col lg:flex-row gap-8 items-start relative">
+          
           {/* --- سایدبار فیلتر (دسکتاپ) --- */}
-          <aside className="hidden lg:block w-72 sticky top-28 bg-[#111] border border-white/5 p-6 rounded-[2rem] h-[calc(100vh-120px)] overflow-y-auto no-scrollbar shadow-xl">
+          <aside className="hidden lg:block w-72 sticky top-28 bg-[#111] border border-white/5 p-6 rounded-[2rem] h-[calc(100vh-120px)] overflow-y-auto no-scrollbar shadow-xl custom-scrollbar">
             <FilterSidebar />
           </aside>
 
           {/* --- محتوای اصلی --- */}
           <div className="flex-1 w-full">
-            {/* تولبار بالا (جستجو، فیلتر موبایل، مرتب‌سازی) */}
+            
+            {/* تولبار بالا */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-[#111]/80 backdrop-blur-md p-4 rounded-2xl border border-white/5 sticky top-24 z-30 shadow-lg">
-              {/* دکمه فیلتر موبایل */}
               <button
                 onClick={() => setIsMobileFilterOpen(true)}
                 className="lg:hidden flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-3 rounded-xl text-sm font-bold hover:bg-white/10 transition-colors w-full md:w-auto justify-center"
               >
                 <SlidersHorizontal size={18} /> فیلترها
+                {isSeasonFilterActive && <span className="w-2 h-2 bg-brand-gold rounded-full animate-pulse" />}
               </button>
 
-              {/* جستجو */}
               <div className="relative w-full md:max-w-md">
                 <Search
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
@@ -257,7 +309,6 @@ export default function ShopPage() {
                 />
               </div>
 
-              {/* مرتب‌سازی */}
               <div className="flex items-center gap-3 w-full md:w-auto justify-end">
                 <span className="text-sm text-gray-500 hidden md:block">
                   مرتب‌سازی:
@@ -277,10 +328,22 @@ export default function ShopPage() {
             </div>
 
             {/* نمایش فیلترهای فعال */}
-            {(activeCategory !== "all" || searchQuery) && (
+            {(activeCategory !== "all" || searchQuery || isSeasonFilterActive) && (
               <div className="flex gap-2 flex-wrap mb-6">
+                
+                {/* بج فیلتر فصل (جدید) */}
+                {isSeasonFilterActive && season && SEASON_PALETTES[season] && (
+                   <div className="flex items-center gap-2 bg-gradient-to-r from-brand-gold to-[#b0936a] text-black px-3 py-1 rounded-full text-xs font-bold animate-in fade-in slide-in-from-top-2">
+                      <Sparkles size={12} />
+                      <span>فیلتر هوشمند: {SEASON_PALETTES[season].title}</span>
+                      <button onClick={() => setIsSeasonFilterActive(false)} className="hover:bg-black/10 rounded-full p-0.5">
+                         <X size={14} />
+                      </button>
+                   </div>
+                )}
+
                 {activeCategory !== "all" && (
-                  <div className="flex items-center gap-2 bg-[#C6A87C] text-black px-3 py-1 rounded-full text-xs font-bold">
+                  <div className="flex items-center gap-2 bg-white/10 text-white px-3 py-1 rounded-full text-xs font-bold border border-white/10">
                     <span>
                       {CATEGORIES.find((c) => c.id === activeCategory)?.name}
                     </span>
@@ -301,6 +364,7 @@ export default function ShopPage() {
                   onClick={() => {
                     setActiveCategory("all");
                     setSearchQuery("");
+                    setIsSeasonFilterActive(false);
                   }}
                   className="text-xs text-gray-400 hover:text-[#C6A87C] transition-colors pr-2"
                 >
@@ -313,7 +377,6 @@ export default function ShopPage() {
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
                 {filteredProducts.map((product) => (
-                  // --- کارت محصول حرفه‌ای ---
                   <motion.div
                     layout
                     initial={{ opacity: 0, y: 20 }}
@@ -321,7 +384,6 @@ export default function ShopPage() {
                     key={product.id}
                     className="group relative bg-[#111] border border-white/5 rounded-[2rem] overflow-hidden hover:border-[#C6A87C]/30 transition-all duration-500 flex flex-col"
                   >
-                    {/* تصویر و اکشن‌ها */}
                     <div className="relative aspect-[4/5] overflow-hidden bg-[#0a0a0a] p-4">
                       <Image
                         src={product.image}
@@ -330,7 +392,6 @@ export default function ShopPage() {
                         className="object-cover group-hover:scale-105 transition-transform duration-700"
                       />
 
-                      {/* لیبل‌ها */}
                       <div className="absolute top-4 left-4 flex flex-col gap-2">
                         {product.label && (
                           <span
@@ -343,14 +404,18 @@ export default function ShopPage() {
                             {product.label}
                           </span>
                         )}
+                        {/* بج فصل (اگر محصول با فصل کاربر مچ بود) */}
+                        {isSeasonFilterActive && season && (
+                           <span className="bg-black/60 backdrop-blur-md text-white border border-brand-gold/50 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                              <Sparkles size={10} className="text-brand-gold" /> پیشنهاد هوشمند
+                           </span>
+                        )}
                       </div>
 
-                      {/* دکمه علاقه‌مندی */}
                       <button className="absolute top-4 right-4 w-10 h-10 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-[#C6A87C] hover:text-black transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 delay-75">
                         <Heart size={18} />
                       </button>
 
-                      {/* اکشن بار پایین تصویر */}
                       <div className="absolute bottom-0 left-0 right-0 p-4 flex gap-2 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out bg-gradient-to-t from-black/80 to-transparent pt-10">
                         <button
                           onClick={() => addToCart(product)}
@@ -368,7 +433,6 @@ export default function ShopPage() {
                       </div>
                     </div>
 
-                    {/* اطلاعات محصول */}
                     <div className="p-6 flex flex-col flex-1">
                       <div className="flex justify-between items-start mb-2 gap-2">
                         <h3 className="font-bold text-base leading-tight line-clamp-2">
@@ -402,19 +466,19 @@ export default function ShopPage() {
                 ))}
               </div>
             ) : (
-              // حالت بدون نتیجه
               <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-[#111] rounded-[3rem] border border-white/5">
                 <Search size={64} className="mb-6 opacity-20" />
                 <h3 className="text-2xl font-bold text-white mb-2">
                   محصولی یافت نشد!
                 </h3>
                 <p>
-                  با این فیلترها نتیجه‌ای نداریم. لطفاً جستجو را تغییر دهید.
+                  با این فیلترها نتیجه‌ای نداریم. لطفاً فیلترها را تغییر دهید.
                 </p>
                 <button
                   onClick={() => {
                     setActiveCategory("all");
                     setSearchQuery("");
+                    setIsSeasonFilterActive(false);
                   }}
                   className="mt-6 text-[#C6A87C] underline hover:text-white transition-colors"
                 >
@@ -506,8 +570,7 @@ export default function ShopPage() {
                   {quickViewProduct.price.toLocaleString()} تومان
                 </div>
                 <p className="text-gray-400 leading-loose mb-8">
-                  توضیحات خلاصه محصول در اینجا قرار می‌گیرد. این یک محصول
-                  فوق‌العاده برای مراقبت حرفه‌ای است.
+                  این محصول با توجه به ویژگی‌های منحصر به فردش، گزینه‌ای عالی برای روتین زیبایی شماست.
                 </p>
 
                 <div className="mt-auto flex gap-4">
