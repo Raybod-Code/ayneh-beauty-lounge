@@ -5,20 +5,18 @@ import { HandLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Camera, Sparkles, Hand, Palette, RefreshCw, 
-  Check, Loader2, Download, Scan, Fingerprint, X
+  Check, Loader2, Download, Scan, ArrowUpDown, 
+  Maximize2, Gem, Fingerprint, Layers, AlertTriangle, X
 } from "lucide-react";
 import { analyzeHandShape, getSkinTone, NAIL_RECOMMENDATIONS, COLOR_PALETTES } from "@/app/constants/nails";
 import html2canvas from "html2canvas";
-import Image from "next/image";
 
 export default function HandAnalyzer() {
-  // --- Refs ---
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const resultCardRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<number>();
 
-  // --- States ---
   const [landmarker, setLandmarker] = useState<HandLandmarker | null>(null);
   const [webcamRunning, setWebcamRunning] = useState(false);
   const [landmarks, setLandmarks] = useState<any[]>([]);
@@ -26,8 +24,19 @@ export default function HandAnalyzer() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [scanStep, setScanStep] = useState(0); 
   const [isDownloading, setIsDownloading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isLowLight, setIsLowLight] = useState(false);
+  const [flash, setFlash] = useState(false);
 
-  // 1. Load Model
+  const getShapeIcon = (id: string) => {
+    switch (id) {
+      case 'slender': return <ArrowUpDown size={64} className="text-[#C6A87C]" />;
+      case 'broad': return <Maximize2 size={64} className="text-[#C6A87C]" />;
+      case 'petite': return <Gem size={64} className="text-[#C6A87C]" />;
+      default: return <Hand size={64} className="text-[#C6A87C]" />;
+    }
+  };
+
   useEffect(() => {
     const loadModel = async () => {
       try {
@@ -45,39 +54,48 @@ export default function HandAnalyzer() {
         setLandmarker(handLandmarker);
       } catch (err) {
         console.error("AI Load Error:", err);
+        setErrorMsg("خطا در بارگذاری مدل دست. لطفاً رفرش کنید.");
       }
     };
     loadModel();
   }, []);
 
-  // 2. Toggle Camera
   const enableCam = async () => {
     if (!landmarker) return;
     if (webcamRunning) {
       setWebcamRunning(false);
       return;
     }
+    const isMobile = window.innerWidth < 768;
+    const constraints = {
+      video: {
+        width: isMobile ? 720 : 1280,
+        height: isMobile ? 1280 : 720,
+        facingMode: "environment" // دوربین پشت برای دست راحت‌تره، ولی user هم میشه
+      }
+    };
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 1280, height: 720 } 
-      });
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadeddata = () => {
            videoRef.current?.play();
            setWebcamRunning(true);
+           setErrorMsg(null);
         };
       }
     } catch (err) {
-      alert("لطفاً دسترسی به دوربین را فعال کنید.");
+      setErrorMsg("دسترسی به دوربین مسدود است.");
     }
   };
 
-  // 3. Loop
   useEffect(() => {
-    if (webcamRunning && landmarker && videoRef.current) {
+    if (webcamRunning && landmarker && videoRef.current && canvasRef.current) {
        const video = videoRef.current;
+       const canvas = canvasRef.current;
+       const ctx = canvas.getContext("2d", { willReadFrequently: true });
        let lastVideoTime = -1;
+       let frameCount = 0;
 
        const renderLoop = () => {
           if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
@@ -89,6 +107,16 @@ export default function HandAnalyzer() {
                 setLandmarks([]);
              }
              lastVideoTime = video.currentTime;
+
+             // Lighting Check
+             if (frameCount++ % 30 === 0 && ctx) {
+                canvas.width = 100; canvas.height = 100;
+                ctx.drawImage(video, 0, 0, 100, 100);
+                const frame = ctx.getImageData(0, 0, 100, 100).data;
+                let total = 0;
+                for (let i = 0; i < frame.length; i += 4) total += (frame[i] + frame[i+1] + frame[i+2]) / 3;
+                setIsLowLight((total / (frame.length / 4)) < 60);
+             }
           }
           requestRef.current = requestAnimationFrame(renderLoop);
        };
@@ -97,16 +125,17 @@ export default function HandAnalyzer() {
     return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
   }, [webcamRunning, landmarker]);
 
-  // 4. Analyze Logic (FIXED: Capture First, Animate Later) 🛠️
   const analyzeHand = () => {
     if (landmarks.length === 0) {
-       alert("لطفاً دست خود را در کادر قرار دهید!");
+       setErrorMsg("لطفاً دست خود را در کادر قرار دهید!");
+       setTimeout(() => setErrorMsg(null), 3000);
        return;
     }
 
-    // --- گام ۱: شکار اطلاعات قبل از خاموش شدن دوربین ---
-    let capturedResult = null;
+    setFlash(true);
+    setTimeout(() => setFlash(false), 300);
 
+    let capturedResult = null;
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -115,18 +144,12 @@ export default function HandAnalyzer() {
       const ctx = canvas.getContext("2d");
       
       if (ctx) {
-        // عکس گرفتن از فریم فعلی
         ctx.drawImage(video, 0, 0);
-        
-        // محاسبات ریاضی (همین لحظه انجام میشه)
         const shapeKey = analyzeHandShape(landmarks);
-        
-        // محاسبات رنگ
         const x = landmarks[9].x * canvas.width;
         const y = (landmarks[9].y + 0.05) * canvas.height; 
         const toneKey = getSkinTone(ctx, x, y);
 
-        // ذخیره نتیجه در متغیر موقت
         capturedResult = {
           shape: NAIL_RECOMMENDATIONS[shapeKey || "Petite"],
           tone: COLOR_PALETTES[toneKey || "Neutral"]
@@ -134,7 +157,6 @@ export default function HandAnalyzer() {
       }
     }
 
-    // اگر به هر دلیلی نتونست بخونه، یه نتیجه پیش‌فرض بده که برنامه گیر نکنه
     if (!capturedResult) {
         capturedResult = {
             shape: NAIL_RECOMMENDATIONS["Petite"],
@@ -142,24 +164,20 @@ export default function HandAnalyzer() {
         };
     }
 
-    // --- گام ۲: شروع نمایش (Show Time) ---
     setIsAnalyzing(true);
-    setWebcamRunning(false); // حالا با خیال راحت دوربین رو خاموش کن
+    setWebcamRunning(false);
 
-    // تایم‌لاین انیمیشن‌ها
     setTimeout(() => setScanStep(1), 1000); 
     setTimeout(() => setScanStep(2), 2500); 
     setTimeout(() => setScanStep(3), 4000); 
 
-    // --- گام ۳: نمایش نهایی نتیجه ---
     setTimeout(() => {
-      setResult(capturedResult); // نتیجه‌ای که اون بالا گرفتیم رو ست کن
+      setResult(capturedResult);
       setIsAnalyzing(false);
       setScanStep(0);
     }, 5500);
   };
 
-  // 5. Download Logic
   const handleDownload = async () => {
     if (!resultCardRef.current) return;
     setIsDownloading(true);
@@ -167,99 +185,122 @@ export default function HandAnalyzer() {
       const element = resultCardRef.current;
       element.style.display = 'flex';
       element.style.position = 'fixed';
-      element.style.zIndex = '-9999';
-      
+      element.style.top = '0';
+      element.style.left = '-9999px'; 
+      element.style.zIndex = '-1';
+
       const canvas = await html2canvas(element, { 
-         scale: 2, 
-         backgroundColor: '#050505',
-         useCORS: true 
+         scale: 2, backgroundColor: '#050505', useCORS: true, logging: false
       });
       
       element.style.display = 'none';
 
       const link = document.createElement("a");
-      link.href = canvas.toDataURL("image/jpeg", 0.9);
-      link.download = `Ayneh-Nails-${Date.now()}.jpg`;
+      link.href = canvas.toDataURL("image/jpeg", 0.95);
+      link.download = `Ayneh-Nail-Report-${Date.now()}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (e) {
       console.error(e);
+      setErrorMsg("خطا در دانلود کارت.");
     } finally {
       setIsDownloading(false);
     }
   };
 
   const reset = () => {
-    setResult(null);
-    setLandmarks([]);
-    setWebcamRunning(false);
-    enableCam();
+    setResult(null); setLandmarks([]); setWebcamRunning(false); enableCam();
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden z-[100]">
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* --- 🌟 کارت دانلود مخفی (Hidden Luxury Card) 🌟 --- */}
-      {result && (
-        <div ref={resultCardRef} className="w-[1080px] h-[1920px] bg-[#050505] hidden flex-col relative border-[40px] border-[#C6A87C] font-sans" dir="rtl">
-           <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-10"></div>
-           <div className="absolute top-0 right-0 w-[900px] h-[900px] bg-gradient-to-b from-[#C6A87C]/10 to-transparent rounded-full blur-[150px] -mr-40 -mt-40"></div>
-           
-           <div className="p-16 flex justify-between items-end border-b border-[#C6A87C]/20 relative z-10">
-              <div className="text-right">
-                 <h1 className="text-9xl font-black text-[#C6A87C] font-serif tracking-tighter">آینه</h1>
-                 <p className="text-4xl text-gray-400 tracking-[0.4em] mt-6 uppercase">NAIL STUDIO</p>
-              </div>
-              <div className="text-left opacity-60" dir="ltr">
-                 <p className="text-3xl font-mono text-white">REF: {Math.floor(Math.random()*9999)}</p>
-                 <p className="text-2xl mt-2 text-gray-400">AI ANALYSIS</p>
-              </div>
-           </div>
+      {flash && <div className="fixed inset-0 bg-white z-[200] animate-[flash_0.3s_ease-out] pointer-events-none"></div>}
 
-           <div className="flex-1 flex flex-col items-center justify-center text-center space-y-20 p-16 relative z-10">
-              <div className="relative">
-                 <div className="w-[400px] h-[400px] rounded-full border-[6px] border-[#C6A87C] flex items-center justify-center bg-[#0a0a0a] shadow-[0_0_150px_rgba(198,168,124,0.4)]">
-                    <span className="text-[12rem]">{result.shape.icon}</span>
-                 </div>
-                 <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-[#C6A87C] text-black px-10 py-4 rounded-full text-3xl font-black uppercase tracking-widest whitespace-nowrap">
-                    {result.shape.shape}
-                 </div>
-              </div>
+      <AnimatePresence>
+        {errorMsg && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="fixed top-10 left-1/2 -translate-x-1/2 z-[150] bg-red-500/10 border border-red-500 text-red-400 px-6 py-4 rounded-2xl flex items-center gap-3 backdrop-blur-md shadow-2xl">
+             <AlertTriangle />
+             <span>{errorMsg}</span>
+             <button onClick={() => setErrorMsg(null)}><X size={18}/></button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              <div>
-                 <p className="text-4xl text-[#C6A87C] font-bold uppercase tracking-[0.3em] mb-8">فرم دست و استایل شما</p>
-                 <h2 className="text-7xl font-black text-white leading-tight max-w-4xl mx-auto">
-                    {result.shape.title}
-                 </h2>
-                 <p className="text-4xl text-gray-400 font-light mt-10 max-w-4xl mx-auto leading-relaxed">
-                    {result.shape.desc}
-                 </p>
-              </div>
+      {/* --- 🌟 Invisible Download Card 🌟 --- */}
+      <div style={{ position: "fixed", left: "-9999px", top: 0 }}>
+        {result && (
+          <div ref={resultCardRef} className="w-[1080px] h-[1920px] bg-[#050505] hidden flex-col relative border-[40px] border-[#C6A87C] font-sans" dir="rtl">
+             {/* ... محتویات کارت دانلود دقیقاً مثل قبل ... */}
+             <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-10"></div>
+             <div className="absolute top-0 right-0 w-[900px] h-[900px] bg-gradient-to-b from-[#C6A87C]/10 to-transparent rounded-full blur-[150px] -mr-40 -mt-40"></div>
+             
+             <div className="p-20 border-b border-[#C6A87C]/20 flex justify-between items-end relative z-10">
+                <div className="text-right">
+                   <h1 className="text-9xl font-black text-[#C6A87C] font-serif tracking-tighter">آینه</h1>
+                   <p className="text-4xl text-gray-400 tracking-[0.4em] mt-6 uppercase">NAIL ATELIER</p>
+                </div>
+                <div className="text-left opacity-50" dir="ltr">
+                   <p className="text-3xl font-mono text-white">REF: {Math.floor(Math.random()*90000)+10000}</p>
+                   <p className="text-2xl mt-2 text-gray-400">{new Date().toLocaleDateString('fa-IR')}</p>
+                </div>
+             </div>
 
-              <div className="w-full bg-white/5 rounded-[4rem] p-12 border border-white/10 mt-10">
-                 <p className="text-3xl text-gray-500 mb-10 uppercase tracking-widest text-center">پالت پیشنهادی پوست {result.tone.title}</p>
-                 <div className="flex justify-center gap-8">
-                    {result.tone.colors.map((c: string, i: number) => (
-                       <div key={i} className="flex flex-col items-center gap-4">
-                          <div className="w-32 h-40 rounded-[2rem] shadow-2xl border-4 border-white/10 relative overflow-hidden" style={{backgroundColor: c}}>
-                             <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent"></div>
-                          </div>
-                       </div>
-                    ))}
-                 </div>
-              </div>
-           </div>
-        </div>
-      )}
+             <div className="flex-1 flex flex-col items-center justify-center text-center space-y-24 p-20 relative z-10">
+                <div className="relative">
+                   <div className="w-[450px] h-[450px] rounded-full border-[3px] border-[#C6A87C] flex items-center justify-center bg-[#0a0a0a] shadow-[0_0_150px_rgba(198,168,124,0.3)]">
+                      {result.shape.id === 'slender' && <ArrowUpDown size={200} className="text-[#C6A87C]" />}
+                      {result.shape.id === 'broad' && <Maximize2 size={200} className="text-[#C6A87C]" />}
+                      {result.shape.id === 'petite' && <Gem size={200} className="text-[#C6A87C]" />}
+                   </div>
+                   <div className="absolute inset-0 border border-[#C6A87C]/30 rounded-full scale-110"></div>
+                </div>
+
+                <div className="text-center w-full">
+                   <div className="flex justify-center items-center gap-4 mb-8">
+                      <span className="h-[1px] w-20 bg-[#C6A87C]/50"></span>
+                      <p className="text-4xl text-[#C6A87C] font-bold uppercase tracking-[0.3em]">تحلیل آناتومی</p>
+                      <span className="h-[1px] w-20 bg-[#C6A87C]/50"></span>
+                   </div>
+                   <h2 className="text-8xl font-black text-white leading-tight mb-8">
+                      {result.shape.title}
+                   </h2>
+                   <p className="text-4xl text-gray-300 font-light leading-relaxed max-w-5xl mx-auto">
+                      {result.shape.desc}
+                   </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-10 w-full">
+                   <div className="bg-white/5 rounded-[3rem] p-12 border border-white/10 text-center">
+                      <span className="text-2xl text-gray-500 uppercase tracking-widest block mb-4">فرم پیشنهادی</span>
+                      <span className="text-5xl text-white font-bold">{result.shape.shape}</span>
+                   </div>
+                   <div className="bg-white/5 rounded-[3rem] p-12 border border-white/10 text-center">
+                      <span className="text-2xl text-gray-500 uppercase tracking-widest block mb-4">تناژ پوست</span>
+                      <span className="text-5xl text-white font-bold">{result.tone.title.split(' ')[1]}</span>
+                   </div>
+                </div>
+             </div>
+
+             <div className="p-16 border-t border-[#C6A87C]/20 flex justify-between items-center bg-[#080808]">
+                <div className="flex items-center gap-6">
+                   <div className="p-5 border border-white/30 rounded-2xl"><Fingerprint size={50} className="text-[#C6A87C]"/></div>
+                   <div className="text-right">
+                      <p className="text-3xl font-bold text-white uppercase">تایید هوش مصنوعی</p>
+                      <p className="text-2xl text-gray-500">پردازش شده در سرورهای آینه</p>
+                   </div>
+                </div>
+                <p className="text-3xl text-[#C6A87C] tracking-[0.5em] uppercase">AYNEH.IR</p>
+             </div>
+          </div>
+        )}
+      </div>
 
       <AnimatePresence mode="wait">
-        
-        {/* --- 1. حالت دوربین و استندبای --- */}
         {!result && !isAnalyzing && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-4xl flex flex-col items-center gap-10">
-            
             <div className="text-center space-y-4">
                <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#C6A87C] via-white to-[#C6A87C] font-serif">
                   استودیو ناخن هوشمند
@@ -281,91 +322,71 @@ export default function HandAnalyzer() {
                   </button>
                 </div>
               )}
-              
               <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover transform scale-x-[-1] transition-all duration-700 ${!webcamRunning ? "opacity-0 scale-110" : "opacity-100 scale-100"}`} />
               
-              {/* ماسک راهنمای دست */}
               {webcamRunning && (
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                   {/* کادر دست */}
-                   <div className={`w-[280px] h-[400px] border-2 rounded-[3rem] transition-colors duration-300 relative ${landmarks.length > 0 ? "border-green-500/50 shadow-[0_0_50px_rgba(34,197,94,0.2)]" : "border-white/20 border-dashed"}`}>
-                      
-                      {/* خط اسکنر */}
-                      {landmarks.length > 0 && (
-                         <motion.div 
-                            initial={{ top: "0%" }} animate={{ top: "100%" }} 
-                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                            className="absolute left-0 right-0 h-[2px] bg-green-400 shadow-[0_0_20px_#4ade80]"
-                         />
-                      )}
-
-                      {/* بج وضعیت */}
-                      <div className={`absolute -bottom-14 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full border backdrop-blur-md flex items-center gap-2 transition-all ${landmarks.length > 0 ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-black/50 text-gray-400 border-white/10"}`}>
-                         {landmarks.length > 0 ? <><Check size={16}/> دست شناسایی شد</> : <><Scan size={16}/> دست خود را در کادر بگیرید</>}
+                   {isLowLight && (
+                      <div className="absolute top-10 left-1/2 -translate-x-1/2 bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 px-6 py-2 rounded-full flex items-center gap-2 backdrop-blur-md animate-pulse z-20">
+                         <AlertTriangle size={16} />
+                         <span className="text-xs font-bold">نور محیط کم است</span>
                       </div>
+                   )}
+                   <div className={`w-[280px] h-[400px] border-2 rounded-[3rem] transition-colors duration-300 relative ${landmarks.length > 0 ? "border-green-500/50 shadow-[0_0_50px_rgba(34,197,94,0.2)]" : "border-white/20 border-dashed"}`}>
+                      {landmarks.length > 0 && (
+                         <motion.div initial={{ top: "0%" }} animate={{ top: "100%" }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} className="absolute left-0 right-0 h-[2px] bg-green-400 shadow-[0_0_20px_#4ade80]" />
+                      )}
+                      <div className={`absolute -bottom-14 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full border backdrop-blur-md flex items-center gap-2 transition-all w-max ${landmarks.length > 0 ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-black/50 text-gray-400 border-white/10"}`}>
+                         {landmarks.length > 0 ? <><Check size={16}/> دست شناسایی شد</> : <><Scan size={16}/> دست را در کادر تنظیم کنید</>}
+                      </div>
+                      <p className="absolute top-full mt-16 left-1/2 -translate-x-1/2 text-sm text-gray-400 whitespace-nowrap text-center opacity-80">
+                        لطفاً دست خود را دقیقاً درون کادر تنظیم کنید تا خطوط سبز شوند
+                      </p>
                    </div>
                 </div>
               )}
             </div>
 
             {webcamRunning && (
-              <button 
-                onClick={analyzeHand} 
-                disabled={landmarks.length === 0}
-                className="w-full max-w-sm py-5 bg-gradient-to-r from-[#C6A87C] to-[#b0936a] text-black rounded-2xl font-black text-xl hover:shadow-[0_0_40px_rgba(198,168,124,0.4)] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
-              >
+              <button onClick={analyzeHand} disabled={landmarks.length === 0} className="w-full max-w-sm py-5 bg-gradient-to-r from-[#C6A87C] to-[#b0936a] text-black rounded-2xl font-black text-xl hover:shadow-[0_0_40px_rgba(198,168,124,0.4)] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale">
                 <Sparkles size={24} /> شروع آنالیز دست
               </button>
             )}
           </motion.div>
         )}
 
-        {/* --- 2. انیمیشن اسکن سینمایی (Loading) --- */}
+        {/* --- 2. Scanning Animation --- */}
         {isAnalyzing && (
-          <motion.div className="flex flex-col items-center justify-center fixed inset-0 bg-[#050505] z-50">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center fixed inset-0 bg-[#050505] z-50">
              <div className="relative w-72 h-72">
-                {/* دایره‌های چرخان */}
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} className="absolute inset-0 border-t-2 border-[#C6A87C] rounded-full shadow-[0_0_40px_#C6A87C]"></motion.div>
                 <motion.div animate={{ rotate: -360 }} transition={{ duration: 5, repeat: Infinity, ease: "linear" }} className="absolute inset-4 border-b-2 border-white/20 rounded-full"></motion.div>
-                
                 <div className="absolute inset-0 flex items-center justify-center">
                    <Hand size={80} className="text-white/80 animate-pulse" />
                 </div>
              </div>
-             
-             {/* متن‌های متغیر */}
              <div className="mt-16 w-64 space-y-4">
-                <motion.div animate={{ opacity: scanStep >= 1 ? 1 : 0.3, x: scanStep >= 1 ? 0 : -20 }} className="flex items-center gap-4 text-[#C6A87C] font-bold">
-                   <Check size={18} /> اندازه‌گیری طول انگشتان
-                </motion.div>
-                <motion.div animate={{ opacity: scanStep >= 2 ? 1 : 0.3, x: scanStep >= 2 ? 0 : -20 }} className="flex items-center gap-4 text-[#C6A87C] font-bold">
-                   <Check size={18} /> نمونه‌برداری رنگ پوست
-                </motion.div>
-                <motion.div animate={{ opacity: scanStep >= 3 ? 1 : 0.3, x: scanStep >= 3 ? 0 : -20 }} className="flex items-center gap-4 text-[#C6A87C] font-bold">
-                   <Check size={18} /> تولید پالت اختصاصی
-                </motion.div>
+                <motion.div animate={{ opacity: scanStep >= 1 ? 1 : 0.3, x: scanStep >= 1 ? 0 : -20 }} className="flex items-center gap-4 text-[#C6A87C] font-bold"><Check size={18} /> اندازه‌گیری انگشتان</motion.div>
+                <motion.div animate={{ opacity: scanStep >= 2 ? 1 : 0.3, x: scanStep >= 2 ? 0 : -20 }} className="flex items-center gap-4 text-[#C6A87C] font-bold"><Check size={18} /> آنالیز رنگ پوست</motion.div>
+                <motion.div animate={{ opacity: scanStep >= 3 ? 1 : 0.3, x: scanStep >= 3 ? 0 : -20 }} className="flex items-center gap-4 text-[#C6A87C] font-bold"><Check size={18} /> تولید گزارش لوکس</motion.div>
              </div>
           </motion.div>
         )}
 
-        {/* --- 3. پنل نتایج (The Dashboard) --- */}
+        {/* --- 3. Result Dashboard --- */}
         {result && (
-          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 py-10 px-4">
-             
-             {/* کارت فرم دست (Left) */}
+          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 py-10 px-4">
+             {/* Shape Card */}
              <div className="bg-[#111] border border-white/10 rounded-[3rem] p-10 relative overflow-hidden group hover:border-[#C6A87C]/50 transition-all duration-500 shadow-2xl">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-[#C6A87C]/10 rounded-full blur-[60px] pointer-events-none"></div>
-                
                 <div className="flex items-start justify-between mb-8">
                    <div className="w-20 h-20 bg-[#C6A87C] rounded-2xl flex items-center justify-center text-4xl shadow-[0_10px_30px_rgba(198,168,124,0.3)]">
-                      {result.shape.icon}
+                      {getShapeIcon(result.shape.id)}
                    </div>
                    <span className="px-4 py-1 rounded-full border border-white/10 text-gray-400 text-xs font-bold uppercase tracking-widest bg-white/5">Shape Analysis</span>
                 </div>
-                
                 <h2 className="text-4xl font-black text-white mb-4 leading-tight">{result.shape.title}</h2>
-                <p className="text-gray-400 leading-loose text-sm mb-8 border-r-2 border-[#C6A87C] pr-4">{result.shape.desc}</p>
-                
+                <p className="text-gray-400 leading-loose text-sm mb-8 border-l-2 border-[#C6A87C] pl-4">{result.shape.desc}</p>
                 <div className="bg-white/5 p-6 rounded-[2rem] border border-white/5 flex items-center justify-between">
                    <div>
                       <span className="text-gray-500 text-xs block mb-1 uppercase tracking-wider">مدل پیشنهادی</span>
@@ -375,7 +396,7 @@ export default function HandAnalyzer() {
                 </div>
              </div>
 
-             {/* کارت رنگ پوست (Right) */}
+             {/* Tone Card */}
              <div className="flex flex-col gap-6">
                 <div className="flex-1 bg-[#111] border border-white/10 rounded-[3rem] p-10 relative overflow-hidden group hover:border-[#C6A87C]/50 transition-all duration-500 shadow-2xl">
                    <div className="flex items-center gap-4 mb-8">
@@ -383,7 +404,6 @@ export default function HandAnalyzer() {
                       <h3 className="text-2xl font-bold text-white">پالت {result.tone.title}</h3>
                    </div>
                    <p className="text-gray-400 text-sm mb-8">{result.tone.desc}</p>
-                   
                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                       {result.tone.colors.map((c: string, idx: number) => (
                          <div key={idx} className="group/color relative cursor-pointer shrink-0">
@@ -394,7 +414,7 @@ export default function HandAnalyzer() {
                    </div>
                 </div>
 
-                {/* دکمه‌ها */}
+                {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-4">
                    <button onClick={handleDownload} disabled={isDownloading} className="flex-1 py-5 bg-[#C6A87C] text-black rounded-[2rem] font-bold flex items-center justify-center gap-2 hover:bg-white hover:scale-[1.02] transition-all shadow-[0_10px_30px_rgba(198,168,124,0.2)]">
                       {isDownloading ? <Loader2 className="animate-spin"/> : <><Download size={20}/> دانلود نتیجه</>}
@@ -404,10 +424,8 @@ export default function HandAnalyzer() {
                    </button>
                 </div>
              </div>
-
           </motion.div>
         )}
-
       </AnimatePresence>
     </div>
   );

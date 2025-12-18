@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/app/context/CartContext"; // 👈 این خط خیلی مهمه
 import AIWidget from "@/components/AIWidget"; // 👈 اینو اضافه کن
+import { ColorProvider } from "@/app/context/ColorContext"; // 👈 اضافه شد
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ayneh-beauty.vercel.app"), // دامین سایتت (بعدا که دیپلوی کردی واقعی میشه)
@@ -95,22 +96,21 @@ export default function RootLayout({
       dir="rtl"
       className={`${doran.variable} ${playfair.variable}`}
     >
-      <body className="bg-[#050505] text-white antialiased selection:bg-[#C6A87C] selection:text-black overflow-x-hidden">
-        {/* 👇 اینجا مغز فروشگاه رو فعال می‌کنیم 👇 */}
-        <CartProvider>
-          <SmoothScroll />
-          <CustomCursor />
-          <AIWidget /> {/* 👈 ✅ این خط باید حتماً اینجا باشه */}
-          <div className="relative z-50">
-            <Navbar />
-          </div>
-          {/* 👇 سبد خرید باید اینجا باشه تا روی همه‌چی باز بشه */}
-          <CartDrawer />
-          <div className="noise-overlay pointer-events-none fixed inset-0 z-40 opacity-5"></div>
-          {children}
-          <Footer />
-        </CartProvider>
-        {/* 👆 پایان بخش فروشگاه 👆 */}
+    <body className="bg-[#050505] text-white antialiased selection:bg-[#C6A87C] selection:text-black overflow-x-hidden">
+        <ColorProvider> {/* 👈 این خط حیاتی اضافه شد */}
+          <CartProvider>
+            <SmoothScroll />
+            <CustomCursor />
+            <AIWidget />
+            <div className="relative z-50">
+              <Navbar />
+            </div>
+            <CartDrawer />
+            <div className="noise-overlay pointer-events-none fixed inset-0 z-40 opacity-5"></div>
+            {children}
+            <Footer />
+          </CartProvider>
+        </ColorProvider>
       </body>
     </html>
   );
