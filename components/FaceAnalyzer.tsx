@@ -12,7 +12,7 @@ import {
 import { SEASON_PALETTES } from "@/app/constants/colors";
 import { PRODUCTS } from "@/app/utils/faceDatabase";
 import { motion, AnimatePresence } from "framer-motion";
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 import {
   Check,
   Sparkles,
@@ -251,82 +251,81 @@ export default function FaceAnalyzer() {
   };
 
   // 5️⃣ Download System – Luxury + font-safe
- const pickFirstFont = (fontFamily: string) => {
-  // "Doran", ui-sans-serif, ...
-  const first = fontFamily.split(",")[0]?.trim() || "Doran";
-  return first.replace(/^["']|["']$/g, "");
-};
+  const pickFirstFont = (fontFamily: string) => {
+    // "Doran", ui-sans-serif, ...
+    const first = fontFamily.split(",")[0]?.trim() || "Doran";
+    return first.replace(/^["']|["']$/g, "");
+  };
 
-const handleDownload = async () => {
-  if (!resultCardRef.current) return;
+  const handleDownload = async () => {
+    if (!resultCardRef.current) return;
 
-  setIsDownloading(true);
+    setIsDownloading(true);
 
-  const element = resultCardRef.current;
-  const computedFontFamily = window.getComputedStyle(element).fontFamily;
-  const firstFont = pickFirstFont(computedFontFamily);
+    const element = resultCardRef.current;
+    const computedFontFamily = window.getComputedStyle(element).fontFamily;
+    const firstFont = pickFirstFont(computedFontFamily);
 
-  try {
-    // صبر برای لود واقعی فونت (بخصوص برای canvas capture)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fonts = (document as any).fonts;
-    if (fonts?.load) {
-      await fonts.load(`16px ${firstFont}`);
-      await fonts.ready;
+    try {
+      // صبر برای لود واقعی فونت (بخصوص برای canvas capture)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fonts = (document as any).fonts;
+      if (fonts?.load) {
+        await fonts.load(`16px ${firstFont}`);
+        await fonts.ready;
+      }
+
+      // clone بساز و داخل viewport بگذار (ولی زیر یک overlay که کاربر نبینه)
+      const clone = element.cloneNode(true) as HTMLElement;
+
+      clone.style.position = "fixed";
+      clone.style.left = "0";
+      clone.style.top = "0";
+      clone.style.width = "1080px";
+      clone.style.height = "1920px";
+      clone.style.zIndex = "2147483646";
+      clone.style.opacity = "1";
+      clone.style.pointerEvents = "none";
+
+      // فونت را روی کل subtree قفل کن (اسم واقعی resolve شده)
+      clone.style.fontFamily = computedFontFamily;
+      clone.querySelectorAll<HTMLElement>("*").forEach((n) => {
+        n.style.fontFamily = computedFontFamily;
+      });
+
+      document.body.appendChild(clone);
+
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        backgroundColor: "#050505",
+        useCORS: true,
+        logging: false,
+        windowWidth: 1080,
+        windowHeight: 1920,
+      });
+
+      document.body.removeChild(clone);
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        window.open(dataUrl, "_blank");
+      } else {
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = `Ayneh-Face-Report-${Date.now()}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      console.error("Download failed:", err);
+      setErrorMsg("خطا در دانلود. لطفاً مجدد تلاش کنید.");
+    } finally {
+      setIsDownloading(false);
     }
-
-    // clone بساز و داخل viewport بگذار (ولی زیر یک overlay که کاربر نبینه)
-    const clone = element.cloneNode(true) as HTMLElement;
-
-    clone.style.position = "fixed";
-    clone.style.left = "0";
-    clone.style.top = "0";
-    clone.style.width = "1080px";
-    clone.style.height = "1920px";
-    clone.style.zIndex = "2147483646";
-    clone.style.opacity = "1";
-    clone.style.pointerEvents = "none";
-
-    // فونت را روی کل subtree قفل کن (اسم واقعی resolve شده)
-    clone.style.fontFamily = computedFontFamily;
-    clone.querySelectorAll<HTMLElement>("*").forEach((n) => {
-      n.style.fontFamily = computedFontFamily;
-    });
-
-    document.body.appendChild(clone);
-
-    const canvas = await html2canvas(clone, {
-      scale: 2,
-      backgroundColor: "#050505",
-      useCORS: true,
-      logging: false,
-      windowWidth: 1080,
-      windowHeight: 1920,
-    });
-
-    document.body.removeChild(clone);
-
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS) {
-      window.open(dataUrl, "_blank");
-    } else {
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = `Ayneh-Face-Report-${Date.now()}.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  } catch (err) {
-    console.error("Download failed:", err);
-    setErrorMsg("خطا در دانلود. لطفاً مجدد تلاش کنید.");
-  } finally {
-    setIsDownloading(false);
-  }
-};
-
+  };
 
   const handleSaveToProfile = () => {
     if (!result) return;

@@ -4,15 +4,15 @@
   /* تعریف رنگ‌های برند */
   --color-brand-bg: #050505;
   --color-brand-dark: #0a0a0a;
-  --color-brand-gold: #C6A87C;
-  --color-brand-gray: #9CA3AF;
+  --color-brand-gold: #c6a87c;
+  --color-brand-gray: #9ca3af;
   --color-brand-light: #ffffff;
 
   /* تعریف فونت‌ها */
   /* نکته: اینجا دوران رو به عنوان Sans پیش‌فرض ست می‌کنیم */
   --font-sans: var(--font-doran), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
-  
+
   /* انیمیشن‌ها */
   --animate-spin-slow: spin 15s linear infinite;
 }
@@ -39,10 +39,22 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .mask-gradient-x {
-    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 10%,
+      black 90%,
+      transparent
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 10%,
+      black 90%,
+      transparent
+    );
   }
 }
 
@@ -64,5 +76,17 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+@layer base {
+  /* فارسی پیش‌فرض */
+  body {
+    font-family: var(--font-doran), sans-serif;
+  }
+
+  /* انگلیسی فقط وقتی صراحتاً lang=en داده شده */
+  :where([lang="en"]) {
+    font-family: var(--font-playfair), serif;
+    direction: ltr;
   }
 }

@@ -1,5 +1,7 @@
 // app/constants/index.ts
 
+// app/constants/index.ts
+
 export const SERVICES = [
   {
     id: 1,
@@ -7,6 +9,8 @@ export const SERVICES = [
     category: "Haircut & Style",
     price: "از ۴۵۰",
     image: "/images/service-haircut.png",
+    durationMinutes: 30,
+    bufferTime: 10,
   },
   {
     id: 2,
@@ -14,6 +18,8 @@ export const SERVICES = [
     category: "Color & Light",
     price: "از ۲.۵۰۰",
     image: "/images/service-color.png",
+    durationMinutes: 120,
+    bufferTime: 15,
   },
   {
     id: 3,
@@ -21,6 +27,8 @@ export const SERVICES = [
     category: "Treatments",
     price: "از ۳.۰۰۰",
     image: "/images/service-spa.png",
+    durationMinutes: 60,
+    bufferTime: 10,
   },
   {
     id: 4,
@@ -28,13 +36,17 @@ export const SERVICES = [
     category: "Bridal Makeup",
     price: "مشاوره حضوری",
     image: "/images/service-bridal.png",
+    durationMinutes: 120,
+    bufferTime: 15,
   },
   {
     id: 5,
     title: "کاشت پودر و ژل",
     category: "Nail Extensions",
     price: "از ۶۰۰",
-    image: "/images/service-bridal.png", 
+    image: "/images/service-bridal.png",
+    durationMinutes: 75,
+    bufferTime: 10,
   },
   {
     id: 6,
@@ -42,6 +54,8 @@ export const SERVICES = [
     category: "Nail Therapy",
     price: "از ۴۰۰",
     image: "/images/service-spa.png",
+    durationMinutes: 45,
+    bufferTime: 10,
   },
   {
     id: 7,
@@ -49,6 +63,8 @@ export const SERVICES = [
     category: "Nail Art",
     price: "از ۵۰ / ناخن",
     image: "/images/service-color.png",
+    durationMinutes: 45,
+    bufferTime: 10,
   },
   {
     id: 8,
@@ -56,6 +72,8 @@ export const SERVICES = [
     category: "Pedicure & Spa",
     price: "از ۵۰۰",
     image: "/images/service-spa.png",
+    durationMinutes: 60,
+    bufferTime: 10,
   },
 ];
 

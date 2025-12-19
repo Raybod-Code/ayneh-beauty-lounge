@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react"; // ✅ useEffect اضافه شد
 import Preloader from "@/components/Preloader";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
@@ -20,7 +20,13 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showFaceAI, setShowFaceAI] = useState(false);
+ useEffect(() => {
+    // فعلاً ساده: یک فریم بعد لودینگ را خاموش کن
+    const t = setTimeout(() => setLoading(false), 0);
+    return () => clearTimeout(t);
+  }, []);
 
+   
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-[#C6A87C] selection:text-black overflow-x-hidden">
       {/* 1. لودینگ اولیه */}
