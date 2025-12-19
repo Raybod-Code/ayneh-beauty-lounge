@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toaster, toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 type NotifType = "booking" | "alert" | "error";
 
@@ -29,49 +30,35 @@ type Notification = {
   read: boolean;
 };
 
-export default function AdminShell({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+type Role = "admin" | "secretary";
+
+type MenuItem = {
+  title: string;
+  icon: any;
+  href: string;
+  role: "all" | Role;
+};
+
+export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const supabase = createClient();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showNotif, setShowNotif] = useState(false);
 
+  const [role, setRole] = useState<Role | null>(null);
+  const [roleLoading, setRoleLoading] = useState(true);
+
   const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      text: "رزرو جدید: سارا محمدی (رنگ مو)",
-      time: "۵ دقیقه پیش",
-      type: "booking",
-      read: false,
-    },
-    {
-      id: 2,
-      text: "موجودی «شامپو خاویار» کم است",
-      time: "۱ ساعت پیش",
-      type: "alert",
-      read: false,
-    },
-    {
-      id: 3,
-      text: "کنسلی نوبت: مینا راد",
-      time: "۲ ساعت پیش",
-      type: "error",
-      read: true,
-    },
+    { id: 1, text: "رزرو جدید: سارا محمدی (رنگ مو)", time: "۵ دقیقه پیش", type: "booking", read: false },
+    { id: 2, text: "موجودی «شامپو خاویار» کم است", time: "۱ ساعت پیش", type: "alert", read: false },
+    { id: 3, text: "کنسلی نوبت: مینا راد", time: "۲ ساعت پیش", type: "error", read: true },
   ]);
 
-  const unreadCount = useMemo(
-    () => notifications.filter((n) => !n.read).length,
-    [notifications]
-  );
+  const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
   const markAsRead = (id: number) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
 
   const markAllRead = () => {
@@ -79,45 +66,86 @@ export default function AdminShell({
     toast("همه اعلان‌ها خوانده شد.");
   };
 
-  const MENU_ITEMS = [
+  const MENU_ITEMS: MenuItem[] = [
     { title: "داشبورد", icon: LayoutDashboard, href: "/admin", role: "all" },
-    {
-      title: "مدیریت نوبت‌ها",
-      icon: CalendarDays,
-      href: "/admin/bookings",
-      role: "secretary",
-    },
-    {
-      title: "آرایشگرها و شیفت‌ها",
-      icon: UserCog,
-      href: "/admin/staff",
-      role: "admin",
-    },
-    {
-      title: "لیست مشتریان",
-      icon: Users,
-      href: "/admin/customers",
-      role: "secretary",
-    },
-    {
-      title: "مدیریت فروشگاه",
-      icon: ShoppingBag,
-      href: "/admin/products",
-      role: "admin",
-    },
-    {
-      title: "تنظیمات سایت",
-      icon: Settings,
-      href: "/admin/settings",
-      role: "admin",
-    },
+    { title: "مدیریت نوبت‌ها", icon: CalendarDays, href: "/admin/bookings", role: "secretary" },
+    { title: "آرایشگرها و شیفت‌ها", icon: UserCog, href: "/admin/staff", role: "admin" },
+    { title: "لیست مشتریان", icon: Users, href: "/admin/customers", role: "secretary" },
+    { title: "مدیریت فروشگاه", icon: ShoppingBag, href: "/admin/products", role: "admin" },
+    { title: "تنظیمات سایت", icon: Settings, href: "/admin/settings", role: "admin" },
   ];
 
+  // نقش را از profiles بخوان
+  useEffect(() => {
+    let isActive = true;
+
+    const loadRole = async () => {
+      setRoleLoading(true);
+
+      // getUser یک درخواست شبکه می‌زند و داده‌ی user را معتبر برمی‌گرداند. [web:903]
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+
+      if (!isActive) return;
+
+      if (userErr || !userId) {
+        setRole(null);
+        setRoleLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", userId)
+        .single();
+
+      if (!isActive) return;
+
+      if (error || !data?.role) {
+        setRole(null);
+      } else {
+        setRole(data.role as Role);
+      }
+
+      setRoleLoading(false);
+    };
+
+    loadRole();
+
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      loadRole();
+    });
+
+    return () => {
+      isActive = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const visibleMenu = useMemo(() => {
+    // تا role لود نشده، فقط آیتم‌های عمومی را نشان بده که UI فِلَش نزند.
+    if (roleLoading) return MENU_ITEMS.filter((i) => i.role === "all");
+
+    return MENU_ITEMS.filter((item) => {
+      if (item.role === "all") return true;
+      if (!role) return false;
+      return item.role === role;
+    });
+  }, [MENU_ITEMS, role, roleLoading]);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast("خطا در خروج");
+      return;
+    }
+    toast("خارج شدید");
+    window.location.href = "/admin/login";
+  };
+
   return (
-    <div
-      className="min-h-screen bg-[#0a0a0a] text-white flex font-sans"
-      dir="rtl"
-    >
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex font-sans" dir="rtl">
       <Toaster
         position="top-center"
         toastOptions={{
@@ -129,10 +157,8 @@ export default function AdminShell({
               "backdrop-blur-md px-4 py-3 " +
               "shadow-[0_22px_70px_rgba(0,0,0,0.75),0_0_0_1px_rgba(198,168,124,0.14),0_0_40px_rgba(198,168,124,0.10)]",
             title: "font-sans text-sm font-extrabold text-white tracking-wide",
-            description:
-              "font-sans text-xs text-gray-300/95 mt-1 leading-relaxed",
-            actionButton:
-              "font-sans bg-brand-gold text-black hover:brightness-110 rounded-xl px-3 py-2 text-xs font-bold",
+            description: "font-sans text-xs text-gray-300/95 mt-1 leading-relaxed",
+            actionButton: "font-sans bg-brand-gold text-black hover:brightness-110 rounded-xl px-3 py-2 text-xs font-bold",
             cancelButton:
               "font-sans bg-white/5 hover:bg-white/10 border border-white/10 text-gray-100 rounded-xl px-3 py-2 text-xs",
             closeButton:
@@ -158,34 +184,24 @@ export default function AdminShell({
         className={`
           fixed md:sticky top-0 right-0 h-screen bg-[#111] border-l border-white/5 transition-all duration-300 z-50 flex flex-col
           w-64
-          ${
-            isSidebarOpen
-              ? "translate-x-0"
-              : "translate-x-full md:translate-x-0"
-          }
+          ${isSidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}
           ${isSidebarOpen ? "md:w-64" : "md:w-20"}
         `}
       >
         <div className="h-20 flex items-center justify-center border-b border-white/5">
           {isSidebarOpen ? (
-            <h1
-              lang="en"
-              className="text-2xl font-black font-serif tracking-widest text-brand-gold"
-            >
+            <h1 lang="en" className="text-2xl font-black font-serif tracking-widest text-brand-gold">
               AYNEH
             </h1>
           ) : (
-            <span
-              lang="en"
-              className="text-xl font-bold text-brand-gold hidden md:block"
-            >
+            <span lang="en" className="text-xl font-bold text-brand-gold hidden md:block">
               A
             </span>
           )}
         </div>
 
         <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto">
-          {MENU_ITEMS.map((item) => {
+          {visibleMenu.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
 
@@ -196,31 +212,27 @@ export default function AdminShell({
                 onClick={() => setIsSidebarOpen(false)}
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-                  ${
-                    isActive
-                      ? "bg-brand-gold text-black font-bold"
-                      : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }
+                  ${isActive ? "bg-brand-gold text-black font-bold" : "text-gray-400 hover:bg-white/5 hover:text-white"}
                   ${!isSidebarOpen && "md:justify-center"}
                 `}
               >
-                <Icon
-                  size={20}
-                  className={
-                    isActive
-                      ? "text-black"
-                      : "text-gray-400 group-hover:text-brand-gold"
-                  }
-                />
+                <Icon size={20} className={isActive ? "text-black" : "text-gray-400 group-hover:text-brand-gold"} />
                 {isSidebarOpen && <span className="flex-1">{item.title}</span>}
               </Link>
             );
           })}
+
+          {/* اگر role هنوز لود نشده یک آیتم ساده نشون بده */}
+          {roleLoading && (
+            <div className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-300">
+              در حال بارگذاری دسترسی‌ها...
+            </div>
+          )}
         </nav>
 
         <div className="p-4 border-t border-white/5">
           <button
-            onClick={() => toast("خروج (MVP)")}
+            onClick={handleLogout}
             className={`
               flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/10 transition-colors
               ${!isSidebarOpen && "md:justify-center"}
@@ -242,9 +254,7 @@ export default function AdminShell({
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-lg font-bold text-white hidden md:block">
-              پنل مدیریت
-            </h2>
+            <h2 className="text-lg font-bold text-white hidden md:block">پنل مدیریت</h2>
           </div>
 
           <div className="flex items-center gap-6">
@@ -269,10 +279,7 @@ export default function AdminShell({
               <AnimatePresence>
                 {showNotif && (
                   <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setShowNotif(false)}
-                    />
+                    <div className="fixed inset-0 z-40" onClick={() => setShowNotif(false)} />
                     <motion.div
                       initial={{ opacity: 0, y: 10, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -286,22 +293,15 @@ export default function AdminShell({
                       "
                     >
                       <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black/30">
-                        <span className="text-sm font-extrabold text-white tracking-wide">
-                          اعلانات ({unreadCount})
-                        </span>
-                        <button
-                          onClick={markAllRead}
-                          className="text-[10px] text-brand-gold hover:underline"
-                        >
+                        <span className="text-sm font-extrabold text-white tracking-wide">اعلانات ({unreadCount})</span>
+                        <button onClick={markAllRead} className="text-[10px] text-brand-gold hover:underline">
                           خواندن همه
                         </button>
                       </div>
 
                       <div className="max-h-80 overflow-y-auto">
                         {notifications.length === 0 ? (
-                          <p className="text-center text-gray-300/80 py-8 text-sm">
-                            پیام جدیدی نیست
-                          </p>
+                          <p className="text-center text-gray-300/80 py-8 text-sm">پیام جدیدی نیست</p>
                         ) : (
                           notifications.map((notif) => (
                             <button
@@ -332,27 +332,14 @@ export default function AdminShell({
 
                               <div
                                 className={`flex-1 rounded-xl px-2 py-1 ${
-                                  notif.read
-                                    ? "bg-transparent"
-                                    : "bg-brand-gold/5"
+                                  notif.read ? "bg-transparent" : "bg-brand-gold/5"
                                 }`}
                               >
-                                <p className="text-xs text-white leading-relaxed">
-                                  {notif.text}
-                                </p>
-
-                                {/* ✅ font-mono حذف شد */}
-                                <span className="text-[10px] text-gray-300/80 mt-1 block">
-                                  {notif.time}
-                                </span>
+                                <p className="text-xs text-white leading-relaxed">{notif.text}</p>
+                                <span className="text-[10px] text-gray-300/80 mt-1 block">{notif.time}</span>
                               </div>
 
-                              {!notif.read && (
-                                <Check
-                                  size={12}
-                                  className="text-brand-gold mt-1"
-                                />
-                              )}
+                              {!notif.read && <Check size={12} className="text-brand-gold mt-1" />}
                             </button>
                           ))
                         )}
@@ -367,7 +354,7 @@ export default function AdminShell({
               <div className="hidden md:flex flex-col items-end">
                 <span className="text-sm font-bold text-white">مدیر سیستم</span>
                 <span lang="en" className="text-xs text-gray-500">
-                  Admin
+                  {roleLoading ? "Loading..." : role ?? "No role"}
                 </span>
               </div>
               <div className="w-10 h-10 rounded-full bg-brand-gold flex items-center justify-center text-black font-bold">
