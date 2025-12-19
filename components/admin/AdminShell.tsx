@@ -29,22 +29,49 @@ type Notification = {
   read: boolean;
 };
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showNotif, setShowNotif] = useState(false);
 
   const [notifications, setNotifications] = useState<Notification[]>([
-    { id: 1, text: "رزرو جدید: سارا محمدی (رنگ مو)", time: "۵ دقیقه پیش", type: "booking", read: false },
-    { id: 2, text: "موجودی «شامپو خاویار» کم است", time: "۱ ساعت پیش", type: "alert", read: false },
-    { id: 3, text: "کنسلی نوبت: مینا راد", time: "۲ ساعت پیش", type: "error", read: true },
+    {
+      id: 1,
+      text: "رزرو جدید: سارا محمدی (رنگ مو)",
+      time: "۵ دقیقه پیش",
+      type: "booking",
+      read: false,
+    },
+    {
+      id: 2,
+      text: "موجودی «شامپو خاویار» کم است",
+      time: "۱ ساعت پیش",
+      type: "alert",
+      read: false,
+    },
+    {
+      id: 3,
+      text: "کنسلی نوبت: مینا راد",
+      time: "۲ ساعت پیش",
+      type: "error",
+      read: true,
+    },
   ]);
 
-  const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications]
+  );
 
   const markAsRead = (id: number) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
   };
 
   const markAllRead = () => {
@@ -54,15 +81,43 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const MENU_ITEMS = [
     { title: "داشبورد", icon: LayoutDashboard, href: "/admin", role: "all" },
-    { title: "مدیریت نوبت‌ها", icon: CalendarDays, href: "/admin/bookings", role: "secretary" },
-    { title: "آرایشگرها و شیفت‌ها", icon: UserCog, href: "/admin/staff", role: "admin" },
-    { title: "لیست مشتریان", icon: Users, href: "/admin/customers", role: "secretary" },
-    { title: "مدیریت فروشگاه", icon: ShoppingBag, href: "/admin/products", role: "admin" },
-    { title: "تنظیمات سایت", icon: Settings, href: "/admin/settings", role: "admin" },
+    {
+      title: "مدیریت نوبت‌ها",
+      icon: CalendarDays,
+      href: "/admin/bookings",
+      role: "secretary",
+    },
+    {
+      title: "آرایشگرها و شیفت‌ها",
+      icon: UserCog,
+      href: "/admin/staff",
+      role: "admin",
+    },
+    {
+      title: "لیست مشتریان",
+      icon: Users,
+      href: "/admin/customers",
+      role: "secretary",
+    },
+    {
+      title: "مدیریت فروشگاه",
+      icon: ShoppingBag,
+      href: "/admin/products",
+      role: "admin",
+    },
+    {
+      title: "تنظیمات سایت",
+      icon: Settings,
+      href: "/admin/settings",
+      role: "admin",
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex font-sans" dir="rtl">
+    <div
+      className="min-h-screen bg-[#0a0a0a] text-white flex font-sans"
+      dir="rtl"
+    >
       <Toaster
         position="top-center"
         toastOptions={{
@@ -74,10 +129,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               "backdrop-blur-md px-4 py-3 " +
               "shadow-[0_22px_70px_rgba(0,0,0,0.75),0_0_0_1px_rgba(198,168,124,0.14),0_0_40px_rgba(198,168,124,0.10)]",
             title: "font-sans text-sm font-extrabold text-white tracking-wide",
-            description: "font-sans text-xs text-gray-300/95 mt-1 leading-relaxed",
-            actionButton: "font-sans bg-brand-gold text-black hover:brightness-110 rounded-xl px-3 py-2 text-xs font-bold",
-            cancelButton: "font-sans bg-white/5 hover:bg-white/10 border border-white/10 text-gray-100 rounded-xl px-3 py-2 text-xs",
-            closeButton: "font-sans bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 rounded-xl px-3 py-2 text-xs",
+            description:
+              "font-sans text-xs text-gray-300/95 mt-1 leading-relaxed",
+            actionButton:
+              "font-sans bg-brand-gold text-black hover:brightness-110 rounded-xl px-3 py-2 text-xs font-bold",
+            cancelButton:
+              "font-sans bg-white/5 hover:bg-white/10 border border-white/10 text-gray-100 rounded-xl px-3 py-2 text-xs",
+            closeButton:
+              "font-sans bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 rounded-xl px-3 py-2 text-xs",
           },
         }}
       />
@@ -99,17 +158,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         className={`
           fixed md:sticky top-0 right-0 h-screen bg-[#111] border-l border-white/5 transition-all duration-300 z-50 flex flex-col
           w-64
-          ${isSidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}
+          ${
+            isSidebarOpen
+              ? "translate-x-0"
+              : "translate-x-full md:translate-x-0"
+          }
           ${isSidebarOpen ? "md:w-64" : "md:w-20"}
         `}
       >
         <div className="h-20 flex items-center justify-center border-b border-white/5">
           {isSidebarOpen ? (
-            <h1 lang="en" className="text-2xl font-black font-serif tracking-widest text-brand-gold">
+            <h1
+              lang="en"
+              className="text-2xl font-black font-serif tracking-widest text-brand-gold"
+            >
               AYNEH
             </h1>
           ) : (
-            <span lang="en" className="text-xl font-bold text-brand-gold hidden md:block">
+            <span
+              lang="en"
+              className="text-xl font-bold text-brand-gold hidden md:block"
+            >
               A
             </span>
           )}
@@ -127,11 +196,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 onClick={() => setIsSidebarOpen(false)}
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-                  ${isActive ? "bg-brand-gold text-black font-bold" : "text-gray-400 hover:bg-white/5 hover:text-white"}
+                  ${
+                    isActive
+                      ? "bg-brand-gold text-black font-bold"
+                      : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  }
                   ${!isSidebarOpen && "md:justify-center"}
                 `}
               >
-                <Icon size={20} className={isActive ? "text-black" : "text-gray-400 group-hover:text-brand-gold"} />
+                <Icon
+                  size={20}
+                  className={
+                    isActive
+                      ? "text-black"
+                      : "text-gray-400 group-hover:text-brand-gold"
+                  }
+                />
                 {isSidebarOpen && <span className="flex-1">{item.title}</span>}
               </Link>
             );
@@ -162,7 +242,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-lg font-bold text-white hidden md:block">پنل مدیریت</h2>
+            <h2 className="text-lg font-bold text-white hidden md:block">
+              پنل مدیریت
+            </h2>
           </div>
 
           <div className="flex items-center gap-6">
@@ -187,7 +269,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <AnimatePresence>
                 {showNotif && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowNotif(false)} />
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowNotif(false)}
+                    />
                     <motion.div
                       initial={{ opacity: 0, y: 10, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -204,14 +289,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <span className="text-sm font-extrabold text-white tracking-wide">
                           اعلانات ({unreadCount})
                         </span>
-                        <button onClick={markAllRead} className="text-[10px] text-brand-gold hover:underline">
+                        <button
+                          onClick={markAllRead}
+                          className="text-[10px] text-brand-gold hover:underline"
+                        >
                           خواندن همه
                         </button>
                       </div>
 
                       <div className="max-h-80 overflow-y-auto">
                         {notifications.length === 0 ? (
-                          <p className="text-center text-gray-300/80 py-8 text-sm">پیام جدیدی نیست</p>
+                          <p className="text-center text-gray-300/80 py-8 text-sm">
+                            پیام جدیدی نیست
+                          </p>
                         ) : (
                           notifications.map((notif) => (
                             <button
@@ -230,12 +320,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 className={`
                                   w-2.5 h-2.5 mt-2 rounded-full shrink-0 bg-brand-gold
                                   shadow-[0_0_18px_rgba(198,168,124,0.45)]
-                                  ${notif.type === "booking" ? "opacity-100" : notif.type === "alert" ? "opacity-75" : "opacity-55"}
+                                  ${
+                                    notif.type === "booking"
+                                      ? "opacity-100"
+                                      : notif.type === "alert"
+                                      ? "opacity-75"
+                                      : "opacity-55"
+                                  }
                                 `}
                               />
 
-                              <div className={`flex-1 rounded-xl px-2 py-1 ${notif.read ? "bg-transparent" : "bg-brand-gold/5"}`}>
-                                <p className="text-xs text-white leading-relaxed">{notif.text}</p>
+                              <div
+                                className={`flex-1 rounded-xl px-2 py-1 ${
+                                  notif.read
+                                    ? "bg-transparent"
+                                    : "bg-brand-gold/5"
+                                }`}
+                              >
+                                <p className="text-xs text-white leading-relaxed">
+                                  {notif.text}
+                                </p>
 
                                 {/* ✅ font-mono حذف شد */}
                                 <span className="text-[10px] text-gray-300/80 mt-1 block">
@@ -243,7 +347,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 </span>
                               </div>
 
-                              {!notif.read && <Check size={12} className="text-brand-gold mt-1" />}
+                              {!notif.read && (
+                                <Check
+                                  size={12}
+                                  className="text-brand-gold mt-1"
+                                />
+                              )}
                             </button>
                           ))
                         )}
