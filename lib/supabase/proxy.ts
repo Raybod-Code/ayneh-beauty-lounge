@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
+import type { NextResponse as NextRes } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+export async function updateSession(request: NextRequest, response?: NextRes) {
+  let res = response ?? NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,14 +16,13 @@ export async function updateSession(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
+            res.cookies.set(name, value, options);
           });
         },
       },
     }
   );
 
-  // طبق داک: برای اعتبارسنجی واقعی در سرور از getClaims استفاده کن
   const { data } = await supabase.auth.getClaims();
 
   const isAdminPath = request.nextUrl.pathname.startsWith("/admin");
@@ -31,8 +31,12 @@ export async function updateSession(request: NextRequest) {
   if (isAdminPath && !isAdminLogin && !data?.claims) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
-    response = NextResponse.redirect(url);
+    const redirectRes = NextResponse.redirect(url);
+
+    // کوکی‌ها را هم روی redirect حفظ کن
+    res.cookies.getAll().forEach((c) => redirectRes.cookies.set(c));
+    return redirectRes;
   }
 
-  return response;
+  return res;
 }

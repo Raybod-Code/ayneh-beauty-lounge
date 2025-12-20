@@ -1,7 +1,15 @@
 import AdminShell from "@/components/admin/AdminShell";
 import AdminTransitions from "@/components/admin/AdminTransitions";
+import { requireTenantRole } from "@/lib/auth/tenant-role";
 
-export default function ProtectedAdminLayout({ children }: { children: React.ReactNode }) {
+export default async function ProtectedAdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // هر کسی به /admin/(protected) می‌آید، باید حداقل member باشد
+  await requireTenantRole(["owner", "admin", "secretary"]);
+
   return (
     <AdminShell>
       <AdminTransitions>{children}</AdminTransitions>

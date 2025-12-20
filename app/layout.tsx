@@ -12,6 +12,8 @@ import { CartProvider } from "@/app/context/CartContext";
 import AIWidget from "@/components/AIWidget";
 import { ColorProvider } from "@/app/context/ColorContext";
 
+import { getTenantFromRequest } from "@/lib/tenant/get-tenant";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://ayneh-beauty.vercel.app"),
   title: {
@@ -35,10 +37,16 @@ export const metadata: Metadata = {
     locale: "fa_IR",
     url: "https://ayneh-beauty.vercel.app",
     title: "AYNEH | جایی که زیبایی بازتاب توست",
-    description: "اولین بیوتی لانژ هوشمند ایران. همین حالا استایل خود را با هوش مصنوعی آنالیز کنید.",
+    description:
+      "اولین بیوتی لانژ هوشمند ایران. همین حالا استایل خود را با هوش مصنوعی آنالیز کنید.",
     siteName: "Ayneh Beauty",
     images: [
-      { url: "/images/og-image.jpg", width: 1200, height: 630, alt: "Ayneh Beauty Lounge" },
+      {
+        url: "/images/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Ayneh Beauty Lounge",
+      },
     ],
   },
   twitter: {
@@ -75,13 +83,49 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { tenant } = await getTenantFromRequest();
+
+  const isRtl = tenant?.public_config?.rtl ?? true;
+  const dir = isRtl ? "rtl" : "ltr";
+  const lang = tenant?.locale ?? "fa";
+  const primaryColor = tenant?.theme?.primary ?? "#C8A951";
+
+  const isSuspended = tenant && tenant.status !== "active";
+
   return (
-    <html lang="fa" dir="rtl" className={`${doran.variable} ${playfair.variable}`}>
-      <body className="font-sans bg-brand-bg text-brand-light">
-        <ColorProvider>
-          <CartProvider>
-            <SmoothScroll />
+    <html
+      lang={lang}
+      dir={dir}
+      className={`${doran.variable} ${playfair.variable}`}
+      suppressHydrationWarning
+    >
+      <body
+        className="font-sans bg-brand-bg text-brand-light"
+        style={
+          {
+            "--ayneh-primary": primaryColor,
+          } as React.CSSProperties
+        }
+      >
+        {isSuspended ? (
+          <main className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center">
+            <h1 className="text-2xl md:text-3xl font-semibold">
+              دسترسی این سالن موقتاً غیرفعال شده است
+            </h1>
+            <p className="max-w-md text-sm md:text-base text-neutral-400">
+              لطفاً برای فعال‌سازی دوباره سرویس با پشتیبانی آینه یا مدیر سالن
+              تماس بگیرید.
+            </p>
+          </main>
+        ) : (
+          <ColorProvider>
+            <CartProvider>
+              <SmoothScroll />
               <CustomCursor />
               <Navbar />
               <CartDrawer />
@@ -89,8 +133,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="noise-overlay" />
               {children}
               <Footer />
-          </CartProvider>
-        </ColorProvider>
+            </CartProvider>
+          </ColorProvider>
+        )}
       </body>
     </html>
   );
