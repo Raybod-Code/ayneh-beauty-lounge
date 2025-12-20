@@ -8,18 +8,20 @@ export async function getCurrentTenantAndRole() {
   const h = await headers();
   const tenantSlug = h.get("x-ayneh-tenant");
 
+  // اگر tenant از روی host پیدا نشد، اصلاً وارد پنل نشود
   if (!tenantSlug) {
-    // فعلاً: اگر روی دامنه‌ی اصلی هستیم، پنل tenant نداریم
-    redirect("/admin/login");
+    redirect("/"); // مهم: دیگر /admin/login نیست
   }
 
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;
-  if (!user) redirect("/admin/login");
 
-  // tenant را پیدا کن
+  if (!user) {
+    redirect("/admin/login");
+  }
+
   const { data: tenantRow, error: tenantError } = await supabase
     .from("tenants")
     .select("id, slug, status")
@@ -27,14 +29,13 @@ export async function getCurrentTenantAndRole() {
     .single();
 
   if (tenantError || !tenantRow) {
-    redirect("/admin/login");
+    redirect("/");
   }
 
   if (tenantRow.status !== "active") {
-    redirect("/"); // یا صفحه‌ی خاص برای معلق بودن سالن
+    redirect("/");
   }
 
-  // membership و role را پیدا کن
   const { data: membership, error: membershipError } = await supabase
     .from("tenant_memberships")
     .select("role")
@@ -59,7 +60,6 @@ export async function requireTenantRole(allowed: TenantRole[]) {
   const ctx = await getCurrentTenantAndRole();
 
   if (!allowed.includes(ctx.role)) {
-    // اجازه ندارد این قسمت پنل را ببیند
     redirect("/admin");
   }
 

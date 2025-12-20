@@ -19,12 +19,12 @@ export default function AdminLoginPage() {
 
   const [focusField, setFocusField] = useState<"email" | "password" | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data.user) router.replace("/admin");
-    })();
-  }, [supabase, router]);
+  // useEffect(() => {
+  //   (async () => {
+  //     const { data } = await supabase.auth.getUser();
+  //     if (data.user) router.replace("/admin");
+  //   })();
+  // }, [supabase, router]);
 
   const signIn = async () => {
     if (!email.trim() || !password) {

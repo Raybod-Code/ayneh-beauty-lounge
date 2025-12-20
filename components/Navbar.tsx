@@ -18,16 +18,16 @@ export default function Navbar() {
     0
   );
 
-  // مخفی کردن نوبار در صفحات ادمین
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
-
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // بعد از همه‌ی هوک‌ها
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const navLinks = [
     { name: "خانه", href: "/" },
@@ -80,7 +80,7 @@ export default function Navbar() {
 
           {/* آیکون‌ها */}
           <div className="flex items-center gap-3 md:gap-4">
-            {/* 1. آیکون ورود (مخصوص موبایل) - جدید */}
+            {/* آیکون ورود موبایل */}
             <Link
               href="/login"
               className="md:hidden p-2 text-white hover:text-[#C6A87C] transition-colors"
@@ -88,7 +88,7 @@ export default function Navbar() {
               <User size={22} />
             </Link>
 
-            {/* دکمه سبد خرید */}
+            {/* سبد خرید */}
             <button
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 hover:bg-white/10 rounded-full transition-colors group text-white"
@@ -105,7 +105,7 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* دکمه ورود (مخصوص دسکتاپ) */}
+            {/* دکمه ورود دسکتاپ */}
             <Link
               href="/login"
               className="hidden md:flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold hover:bg-[#C6A87C] transition-colors"
@@ -113,7 +113,7 @@ export default function Navbar() {
               <User size={18} /> ورود
             </Link>
 
-            {/* دکمه منوی موبایل */}
+            {/* منوی موبایل */}
             <button
               onClick={() => setIsOpen(true)}
               className="md:hidden p-2 text-white hover:text-[#C6A87C] transition-colors"
@@ -124,7 +124,7 @@ export default function Navbar() {
         </div>
       </motion.nav>
 
-      {/* منوی موبایل (Full Screen) */}
+      {/* منوی موبایل */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -151,8 +151,7 @@ export default function Navbar() {
               </Link>
             ))}
 
-            {/* 2. دکمه ورود بزرگ در منوی موبایل - جدید */}
-            <div className="w-full max-w-xs h-[1px] bg-white/10 my-4"></div>
+            <div className="w-full max-w-xs h-[1px] bg-white/10 my-4" />
 
             <Link
               href="/login"

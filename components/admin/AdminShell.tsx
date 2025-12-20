@@ -30,7 +30,8 @@ type Notification = {
   read: boolean;
 };
 
-type Role = "admin" | "secretary";
+// اضافه شدن owner به تایپ نقش‌ها
+type Role = "owner" | "admin" | "secretary";
 
 type MenuItem = {
   title: string;
@@ -39,15 +40,24 @@ type MenuItem = {
   role: "all" | Role;
 };
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+// آپدیت کردن ورودی کامپوننت که با Layout سازگار باشد
+interface AdminShellProps {
+  children: React.ReactNode;
+  user?: any; // اختیاری کردیم که اگر پاس ندادی هم کار کنه
+  role?: string; // اختیاری
+}
+
+export default function AdminShell({ children, user: initialUser, role: initialRole }: AdminShellProps) {
   const pathname = usePathname();
   const supabase = createClient();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showNotif, setShowNotif] = useState(false);
 
-  const [role, setRole] = useState<Role | null>(null);
-  const [roleLoading, setRoleLoading] = useState(true);
+  // اگر نقش از بالا اومده (از layout)، همون رو بذار، وگرنه نال بذار تا useEffect پر کنه
+  const [role, setRole] = useState<Role | null>((initialRole as Role) || null);
+  // اگر نقش اومده، یعنی لودینگ نداریم
+  const [roleLoading, setRoleLoading] = useState(!initialRole);
 
   const [notifications, setNotifications] = useState<Notification[]>([
     { id: 1, text: "رزرو جدید: سارا محمدی (رنگ مو)", time: "۵ دقیقه پیش", type: "booking", read: false },
@@ -75,14 +85,15 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     { title: "تنظیمات سایت", icon: Settings, href: "/admin/settings", role: "admin" },
   ];
 
-  // نقش را از profiles بخوان
+  // نقش را از profiles بخوان (فقط اگر از props نیامده بود)
   useEffect(() => {
+    if (initialRole) return; // اگر نقش پاس داده شده، دیگه فچ نکن
+
     let isActive = true;
 
     const loadRole = async () => {
       setRoleLoading(true);
 
-      // getUser یک درخواست شبکه می‌زند و داده‌ی user را معتبر برمی‌گرداند. [web:903]
       const { data: userData, error: userErr } = await supabase.auth.getUser();
       const userId = userData.user?.id;
 
@@ -121,15 +132,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       isActive = false;
       sub.subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, initialRole]);
 
   const visibleMenu = useMemo(() => {
-    // تا role لود نشده، فقط آیتم‌های عمومی را نشان بده که UI فِلَش نزند.
     if (roleLoading) return MENU_ITEMS.filter((i) => i.role === "all");
 
     return MENU_ITEMS.filter((item) => {
       if (item.role === "all") return true;
       if (!role) return false;
+      // اگر ادمین یا اونر هست، همه چیز رو ببینه (یا لاجیک دقیق‌تر)
+      if (role === 'owner') return true; 
+      if (role === 'admin' && item.role !== 'owner') return true;
       return item.role === role;
     });
   }, [MENU_ITEMS, role, roleLoading]);
@@ -222,7 +235,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             );
           })}
 
-          {/* اگر role هنوز لود نشده یک آیتم ساده نشون بده */}
           {roleLoading && (
             <div className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-300">
               در حال بارگذاری دسترسی‌ها...
@@ -354,7 +366,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <div className="hidden md:flex flex-col items-end">
                 <span className="text-sm font-bold text-white">مدیر سیستم</span>
                 <span lang="en" className="text-xs text-gray-500">
-                  {roleLoading ? "Loading..." : role ?? "No role"}
+                  {roleLoading ? "..." : role ?? "No role"}
                 </span>
               </div>
               <div className="w-10 h-10 rounded-full bg-brand-gold flex items-center justify-center text-black font-bold">
