@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Playfair_Display } from "next/font/google";
@@ -11,6 +12,7 @@ import Footer from "@/components/Footer";
 import { CartProvider } from "@/app/context/CartContext";
 import AIWidget from "@/components/AIWidget";
 import { ColorProvider } from "@/app/context/ColorContext";
+import { TenantProvider } from "@/lib/tenant/context";
 
 import { getTenantFromRequest } from "@/lib/tenant/get-tenant";
 
@@ -88,7 +90,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { tenant } = await getTenantFromRequest();
+  const tenant = await getTenantFromRequest();
 
   const isRtl = tenant?.public_config?.rtl ?? true;
   const dir = isRtl ? "rtl" : "ltr";
@@ -112,30 +114,32 @@ export default async function RootLayout({
           } as React.CSSProperties
         }
       >
-        {isSuspended ? (
-          <main className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center">
-            <h1 className="text-2xl md:text-3xl font-semibold">
-              دسترسی این سالن موقتاً غیرفعال شده است
-            </h1>
-            <p className="max-w-md text-sm md:text-base text-neutral-400">
-              لطفاً برای فعال‌سازی دوباره سرویس با پشتیبانی آینه یا مدیر سالن
-              تماس بگیرید.
-            </p>
-          </main>
-        ) : (
-          <ColorProvider>
-            <CartProvider>
-              <SmoothScroll />
-              <CustomCursor />
-              <Navbar />
-              <CartDrawer />
-              <AIWidget />
-              <div className="noise-overlay" />
-              {children}
-              <Footer />
-            </CartProvider>
-          </ColorProvider>
-        )}
+        <TenantProvider tenant={tenant}>
+          {isSuspended ? (
+            <main className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center">
+              <h1 className="text-2xl md:text-3xl font-semibold">
+                دسترسی این سالن موقتاً غیرفعال شده است
+              </h1>
+              <p className="max-w-md text-sm md:text-base text-neutral-400">
+                لطفاً برای فعال‌سازی دوباره سرویس با پشتیبانی آینه یا مدیر سالن
+                تماس بگیرید.
+              </p>
+            </main>
+          ) : (
+            <ColorProvider>
+              <CartProvider>
+                <SmoothScroll />
+                <CustomCursor />
+                <Navbar />
+                <CartDrawer />
+                <AIWidget />
+                <div className="noise-overlay" />
+                {children}
+                <Footer />
+              </CartProvider>
+            </ColorProvider>
+          )}
+        </TenantProvider>
       </body>
     </html>
   );
