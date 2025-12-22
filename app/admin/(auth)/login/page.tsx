@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { toast } from "sonner";
@@ -10,21 +10,30 @@ import MagneticButton from "@/components/ui/MagneticButton";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
+
+  const nextPath = searchParams.get("next") || "/admin";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState<"login" | "reset" | null>(null);
-
   const [focusField, setFocusField] = useState<"email" | "password" | null>(null);
 
-  // useEffect(() => {
-  //   (async () => {
-  //     const { data } = await supabase.auth.getUser();
-  //     if (data.user) router.replace("/admin");
-  //   })();
-  // }, [supabase, router]);
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!active) return;
+      if (data.user) router.replace(nextPath);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [supabase, router, nextPath]);
 
   const signIn = async () => {
     if (!email.trim() || !password) {
@@ -45,7 +54,7 @@ export default function AdminLoginPage() {
     }
 
     toast("خوش آمدید. در حال انتقال به پنل…");
-    router.replace("/admin");
+    router.replace(nextPath);
   };
 
   const resetPassword = async () => {
@@ -56,7 +65,8 @@ export default function AdminLoginPage() {
 
     setLoading("reset");
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/admin/login`,
+      // بهتره بعد از reset دوباره به همین صفحه با next برگرده
+      redirectTo: `${window.location.origin}/admin/login?next=${encodeURIComponent(nextPath)}`,
     });
     setLoading(null);
 
@@ -70,9 +80,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#060607] text-white" dir="rtl">
-      {/* Background: more showy mesh + motion */}
       <div className="pointer-events-none absolute inset-0">
-        {/* Base mesh */}
         <div
           className="absolute inset-0"
           style={{
@@ -85,7 +93,6 @@ export default function AdminLoginPage() {
           }}
         />
 
-        {/* Floating blobs (more movement) */}
         <motion.div
           aria-hidden
           initial={{ opacity: 0, scale: 0.96 }}
@@ -132,7 +139,6 @@ export default function AdminLoginPage() {
           }}
         />
 
-        {/* subtle noise overlay */}
         <div
           className="absolute inset-0 opacity-[0.06] mix-blend-overlay"
           style={{
@@ -141,7 +147,6 @@ export default function AdminLoginPage() {
           }}
         />
 
-        {/* vignette */}
         <div
           className="absolute inset-0"
           style={{
@@ -155,15 +160,7 @@ export default function AdminLoginPage() {
           initial={{ opacity: 0, y: 18, filter: "blur(10px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-          className="
-            w-full max-w-md
-            rounded-[28px]
-            border border-white/10
-            bg-white/[0.05]
-            backdrop-blur-2xl
-            shadow-[0_30px_120px_rgba(0,0,0,0.65)]
-            overflow-hidden
-          "
+          className="w-full max-w-md rounded-[28px] border border-white/10 bg-white/[0.05] backdrop-blur-2xl shadow-[0_30px_120px_rgba(0,0,0,0.65)] overflow-hidden"
         >
           <div
             className="h-[1px] w-full"
@@ -202,11 +199,7 @@ export default function AdminLoginPage() {
                 >
                   <Mail size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" />
                   <input
-                    className="
-                      w-full rounded-2xl bg-black/40 border border-white/10
-                      px-4 py-3 pr-11 outline-none
-                      focus:border-brand-gold/60 transition
-                    "
+                    className="w-full rounded-2xl bg-black/40 border border-white/10 px-4 py-3 pr-11 outline-none focus:border-brand-gold/60 transition"
                     placeholder="admin@ayneh.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -230,11 +223,7 @@ export default function AdminLoginPage() {
                   transition={{ duration: 0.25, ease: "easeOut" }}
                 >
                   <input
-                    className="
-                      w-full rounded-2xl bg-black/40 border border-white/10
-                      px-4 py-3 pl-12 outline-none
-                      focus:border-brand-gold/60 transition
-                    "
+                    className="w-full rounded-2xl bg-black/40 border border-white/10 px-4 py-3 pl-12 outline-none focus:border-brand-gold/60 transition"
                     placeholder="••••••••"
                     type={showPass ? "text" : "password"}
                     value={password}
@@ -257,13 +246,7 @@ export default function AdminLoginPage() {
               <MagneticButton
                 onClick={signIn}
                 disabled={loading === "login"}
-                className="
-                  w-full rounded-2xl py-3 font-bold text-sm
-                  bg-brand-gold text-black
-                  hover:brightness-110 active:brightness-105
-                  disabled:opacity-60 disabled:cursor-not-allowed
-                  transition
-                "
+                className="w-full rounded-2xl py-3 font-bold text-sm bg-brand-gold text-black hover:brightness-110 active:brightness-105 disabled:opacity-60 disabled:cursor-not-allowed transition"
               >
                 {loading === "login" ? <Loader2 className="mx-auto animate-spin" size={18} /> : "ورود"}
               </MagneticButton>

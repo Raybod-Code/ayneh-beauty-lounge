@@ -10,11 +10,9 @@ function getHostname(hostHeader: string | null) {
 function resolveTenantSlug(hostname: string | null) {
   if (!hostname) return null;
 
-  // dev: royal.localhost => royal
   if (hostname.endsWith(".localhost")) return hostname.replace(".localhost", "");
   if (hostname === "localhost") return null;
 
-  // prod later (دامنه خریدی): فقط ENV ست می‌کنی
   const root = process.env.AYNEH_ROOT_DOMAIN?.toLowerCase();
   if (!root) return null;
 
@@ -24,13 +22,28 @@ function resolveTenantSlug(hostname: string | null) {
   return null;
 }
 
-export async function proxy(request: NextRequest) {
-  const hostname = getHostname(request.headers.get("host"));
-  const tenantSlug = resolveTenantSlug(hostname);
+function shouldSkipTenant(request: NextRequest) {
+  const p = request.nextUrl.pathname;
 
+  // God Panel: کاملاً مستقل از tenant
+  if (p.startsWith("/superadmin")) return true;
+
+  // (اختیاری ولی پیشنهادی) وبهوک‌ها و endpointهای سیستمی
+  if (p.startsWith("/api/webhooks")) return true;
+
+  return false;
+}
+
+export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
+
+  const hostname = getHostname(request.headers.get("host"));
   if (hostname) requestHeaders.set("x-ayneh-host", hostname);
-  if (tenantSlug) requestHeaders.set("x-ayneh-tenant", tenantSlug);
+
+  if (!shouldSkipTenant(request)) {
+    const tenantSlug = resolveTenantSlug(hostname);
+    if (tenantSlug) requestHeaders.set("x-ayneh-tenant", tenantSlug);
+  }
 
   const res = NextResponse.next({
     request: { headers: requestHeaders },

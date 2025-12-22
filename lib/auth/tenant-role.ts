@@ -4,13 +4,34 @@ import { createClient } from "@/lib/supabase/server";
 
 export type TenantRole = "owner" | "admin" | "secretary" | "customer";
 
+function getTenantSlugFromHost(host: string | null) {
+  if (!host) return null;
+  const hostname = host.split(":")[0]?.toLowerCase() ?? null;
+  if (!hostname) return null;
+
+  // dev: royal.localhost => royal
+  if (hostname.endsWith(".localhost")) return hostname.replace(".localhost", "");
+
+  // prod: بعداً با AYNEH_ROOT_DOMAIN همینجا توسعه می‌دیم
+  return null;
+}
+
+function buildLoginRedirect(nextPath: string) {
+  return `/admin/login?next=${encodeURIComponent(nextPath)}`;
+}
+
 export async function getCurrentTenantAndRole() {
   const h = await headers();
-  const tenantSlug = h.get("x-ayneh-tenant");
 
-  // اگر tenant از روی host پیدا نشد، اصلاً وارد پنل نشود
+  const pathname = h.get("x-invoke-path") || "/admin"; // fallback
+  const tenantSlugHeader = h.get("x-ayneh-tenant");
+  const host = h.get("host");
+
+  const tenantSlug = tenantSlugHeader || getTenantSlugFromHost(host);
+
+  // اگر tenant پیدا نشد، اصلاً پنل tenant نباید باز بشه
   if (!tenantSlug) {
-    redirect("/"); // مهم: دیگر /admin/login نیست
+    redirect("/");
   }
 
   const supabase = await createClient();
@@ -19,7 +40,7 @@ export async function getCurrentTenantAndRole() {
   const user = userData?.user;
 
   if (!user) {
-    redirect("/admin/login");
+    redirect(buildLoginRedirect("/admin"));
   }
 
   const { data: tenantRow, error: tenantError } = await supabase
@@ -44,7 +65,7 @@ export async function getCurrentTenantAndRole() {
     .single();
 
   if (membershipError || !membership?.role) {
-    redirect("/admin/login");
+    redirect(buildLoginRedirect("/admin"));
   }
 
   const role = membership.role as TenantRole;
