@@ -25,9 +25,16 @@ export default function Navbar() {
   }, []);
 
   // بعد از همه‌ی هوک‌ها
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
+// قبلی (فقط /admin):
+if (pathname?.startsWith("/admin")) {
+  return null;
+}
+
+// جدید (هم /admin هم /superadmin):
+if (pathname?.startsWith("/admin") || pathname?.startsWith("/superadmin")) {
+  return null;
+}
+
 
   const navLinks = [
     { name: "خانه", href: "/" },

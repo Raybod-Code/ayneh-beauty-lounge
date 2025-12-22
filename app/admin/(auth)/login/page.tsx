@@ -13,7 +13,7 @@ export default function AdminLoginPage() {
   const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
 
-  const nextPath = searchParams.get("next") || "/admin";
+  const nextPath = searchParams.get("next");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,41 +21,67 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState<"login" | "reset" | null>(null);
   const [focusField, setFocusField] = useState<"email" | "password" | null>(null);
 
-  useEffect(() => {
-    let active = true;
+const signIn = async () => {
+  if (!email.trim() || !password) {
+    toast("لطفاً ایمیل و رمز عبور را وارد فرمایید.");
+    return;
+  }
 
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!active) return;
-      if (data.user) router.replace(nextPath);
-    })();
+  setLoading("login");
+  const { error: authError } = await supabase.auth.signInWithPassword({
+    email: email.trim(),
+    password,
+  });
 
-    return () => {
-      active = false;
-    };
-  }, [supabase, router, nextPath]);
-
-  const signIn = async () => {
-    if (!email.trim() || !password) {
-      toast("لطفاً ایمیل و رمز عبور را وارد فرمایید.");
-      return;
-    }
-
-    setLoading("login");
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+  if (authError) {
     setLoading(null);
+    toast("ورود انجام نشد. لطفاً اطلاعات را بررسی کنید.");
+    return;
+  }
 
-    if (error) {
-      toast("ورود انجام نشد. لطفاً اطلاعات را بررسی کنید.");
-      return;
+  // بعد از لاگین موفق، نقش را بخوان
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData?.user?.id;
+
+  console.log("🔐 User ID:", userId);
+
+  let targetPath = nextPath || null;
+
+  if (userId && !targetPath) {
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", userId)
+      .single();
+
+    console.log("👤 Profile data:", profile);
+    console.log("❌ Profile error:", profileError);
+
+    if (profile?.role === "super_admin") {
+      targetPath = "/superadmin/dashboard";
+      console.log("✅ Super admin detected, going to:", targetPath);
+    } else {
+      targetPath = "/";
+      console.log("⚠️ Not super admin, role is:", profile?.role);
+      toast("لطفاً از طریق دامنه سالن خود وارد شوید.");
     }
+  } else if (nextPath) {
+    console.log("🔗 Next path exists:", nextPath);
+  }
 
+  setLoading(null);
+
+  console.log("🎯 Final target:", targetPath);
+  
+  if (targetPath) {
     toast("خوش آمدید. در حال انتقال به پنل…");
-    router.replace(nextPath);
-  };
+    router.replace(targetPath);
+  } else {
+    toast("خوش آمدید.");
+    router.replace("/");
+  }
+};
+
 
   const resetPassword = async () => {
     if (!email.trim()) {
@@ -65,8 +91,7 @@ export default function AdminLoginPage() {
 
     setLoading("reset");
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      // بهتره بعد از reset دوباره به همین صفحه با next برگرده
-      redirectTo: `${window.location.origin}/admin/login?next=${encodeURIComponent(nextPath)}`,
+      redirectTo: `${window.location.origin}/admin/login${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""}`,
     });
     setLoading(null);
 

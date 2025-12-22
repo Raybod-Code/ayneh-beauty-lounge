@@ -2,11 +2,19 @@
 
 import { Instagram, Phone, MapPin, ArrowUp, Mail } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  // مخفی کردن footer در پنل‌های ادمین و سوپرادمین
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/superadmin")) {
+    return null;
+  }
 
   return (
     <footer className="bg-black text-white pt-32 pb-10 px-6 relative overflow-hidden border-t border-white/5">

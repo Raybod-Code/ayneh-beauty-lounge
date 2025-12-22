@@ -2,13 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import type { NextResponse as NextRes } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-function withNext(url: URL, nextPath: string) {
-  url.searchParams.set("next", nextPath);
-  return url;
-}
-
 export async function updateSession(request: NextRequest, response?: NextRes) {
-  // نکته: اگر response پاس داده شده (از proxy.ts ریشه)، باید همان را حفظ کنیم
   let res =
     response ??
     NextResponse.next({
@@ -17,7 +11,6 @@ export async function updateSession(request: NextRequest, response?: NextRes) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    // اگر واقعاً همین env را داری نگه‌دار؛ در غیر این صورت باید ANON_KEY باشد.
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
@@ -34,7 +27,6 @@ export async function updateSession(request: NextRequest, response?: NextRes) {
     }
   );
 
-  // بهتر از claims برای فهمیدن لاگین بودن
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;
 
@@ -51,8 +43,9 @@ export async function updateSession(request: NextRequest, response?: NextRes) {
 
   if (needsAuth && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin/login"; // لاگین مشترک
-    withNext(url, pathname);
+    url.pathname = "/admin/login";
+    // این باگ اصلی بود - باید return value استفاده شود
+    url.searchParams.set("next", pathname);
 
     const redirectRes = NextResponse.redirect(url);
     res.cookies.getAll().forEach((c) => redirectRes.cookies.set(c));

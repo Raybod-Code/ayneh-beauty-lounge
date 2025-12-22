@@ -6,17 +6,21 @@ export async function requireSuperAdmin() {
 
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;
-  if (!user) redirect("/admin/login");
 
-  const { data: profile, error } = await supabase
+  if (!user) {
+    // لاگین مشترک روی روت دامین
+    redirect(`/admin/login?next=/superadmin/dashboard`);
+  }
+
+  const { data, error } = await supabase
     .from("profiles")
-    .select("role, full_name")
+    .select("full_name, role")
     .eq("user_id", user.id)
     .single();
 
-  if (error || profile?.role !== "super_admin") {
+  if (error || data?.role !== "super_admin") {
     redirect("/");
   }
 
-  return { user, profile };
+  return { user, profile: data };
 }

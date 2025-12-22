@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { Playfair_Display } from "next/font/google";
 import "./globals.css";
 
+import { headers } from "next/headers";
 import SmoothScroll from "@/components/SmoothScroll";
 import CartDrawer from "@/components/CartDrawer";
 import CustomCursor from "@/components/CustomCursor";
@@ -91,6 +92,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const tenant = await getTenantFromRequest();
+  const headersList = await headers();
+  const pathname = headersList.get("x-invoke-path") || "";
+
+  // تشخیص اینکه آیا در پنل ادمین/سوپرادمین هستیم
+  const isAdminPanel = pathname.startsWith("/admin") || pathname.startsWith("/superadmin");
 
   const isRtl = tenant?.public_config?.rtl ?? true;
   const dir = isRtl ? "rtl" : "ltr";
@@ -99,6 +105,25 @@ export default async function RootLayout({
 
   const isSuspended = tenant && tenant.status !== "active";
 
+  // برای پنل‌های ادمین، layout ساده بدون navbar/footer
+  if (isAdminPanel) {
+    return (
+      <html
+        lang={lang}
+        dir={dir}
+        className={`${doran.variable} ${playfair.variable}`}
+        suppressHydrationWarning
+      >
+        <body className="font-sans bg-brand-bg text-brand-light">
+          <TenantProvider tenant={tenant}>
+            {children}
+          </TenantProvider>
+        </body>
+      </html>
+    );
+  }
+
+  // برای صفحات عمومی، layout کامل با navbar/footer
   return (
     <html
       lang={lang}
