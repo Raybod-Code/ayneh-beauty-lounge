@@ -1,12 +1,28 @@
-import { requireSuperAdmin } from "@/lib/auth/super-admin";
-import SuperAdminShell from "@/components/admin/SuperAdminShell";
+"use client";
 
-export default async function Layout({ children }: { children: React.ReactNode }) {
-  const { profile, user } = await requireSuperAdmin();
+import { useState } from "react";
+import Sidebar from "./components/Sidebar";
+
+export default function SuperAdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <SuperAdminShell displayName={profile?.full_name ?? user.email ?? "Super Admin"}>
-      {children}
-    </SuperAdminShell>
+    <div className="flex min-h-screen bg-[#0a0a0a] text-white">
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+
+      {/* Main Content */}
+      <div
+        className={`
+          flex-1 transition-all duration-300 ease-in-out
+          ${collapsed ? "lg:mr-20" : "lg:mr-[280px]"}
+        `}
+      >
+        <main className="w-full">{children}</main>
+      </div>
+    </div>
   );
 }
